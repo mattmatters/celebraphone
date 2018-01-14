@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en-us">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <title>Emscripten-Generated Code</title>
+
+    </head>
+    <body>
+        <video id="video" autoplay />
+        <canvas id="video-out" />
+        <script type='text/javascript'>
+         let video = document.querySelector("#video");
+         let videoOut = document.querySelector("#video-out");
+
+         navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia || navigator.oGetUserMedia;
+
+         if (navigator.getUserMedia) {
+             navigator.getUserMedia({ video: true }, handleVideo, () => console.log('error with webcam'));
+         }
+
+         function handleVideo(stream) {
+             video.srcObject = stream;
+             const track = stream.getVideoTracks()[0];
+             imageCapture = new ImageCapture(track);
+         }
+
+        </script>
+
+        <script async type="text/javascript" src="build/face_replace.js"></script>
+    </body>
+
+</html>

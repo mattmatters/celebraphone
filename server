@@ -1,0 +1,4 @@
+FROM nginx
+
+COPY ./ /usr/share/nginx/html
+COPY ./mime.types /etc/nginx/mime.types
