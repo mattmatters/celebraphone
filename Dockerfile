@@ -75,4 +75,4 @@ COPY . .
 # Set up for building
 RUN /bin/bash -c "source /usr/emsdk/emsdk_env.sh && emcmake cmake"
 
-CMD /bin/bash -c "source /usr/emsdk/emsdk_env.sh bash"
+CMD /bin/bash -c "source /usr/emsdk/emsdk_env.sh && bash"
