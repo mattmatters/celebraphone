@@ -15,7 +15,6 @@ RUN apt-get update && apt-get -y install git \
     libopencv-dev \
     gcc-multilib \
     g++-multilib
-#    libgfortran3
 
 RUN cd /usr
 
@@ -73,6 +72,6 @@ RUN wget http://dlib.net/files/shape_predictor_68_face_landmarks.dat.bz2 && \
 COPY . .
 
 # Set up for building
-RUN /bin/bash -c "source /usr/emsdk/emsdk_env.sh && emcmake cmake"
+RUN /bin/bash -c "source /usr/emsdk/emsdk_env.sh && emcmake cmake && emmake make"
 
 CMD /bin/bash -c "source /usr/emsdk/emsdk_env.sh && bash"
