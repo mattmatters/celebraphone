@@ -7,27 +7,75 @@
 
     </head>
     <body>
-        <video id="video" autoplay />
-        <canvas id="video-out" />
+        <video id="video" autoplay hidden></video>
+        <canvas id="video-out"></canvas>
+        <canvas id="face-canvas"></canvas>
         <script type='text/javascript'>
          let video = document.querySelector("#video");
          let videoOut = document.querySelector("#video-out");
+         let faceCanvas = document.querySelector("#face-canvas");
+         let con = videoOut.getContext('2d');
+         let faceCon = faceCanvas.getContext('2d');
+         let isStreaming = false;
+         let width = 600;
+         let height = 420;
 
-         navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia || navigator.oGetUserMedia;
+         video.addEventListener('canplay', function(e) {
+             if (!isStreaming) {
 
-         if (navigator.getUserMedia) {
-             navigator.getUserMedia({ video: true }, handleVideo, () => console.log('error with webcam'));
+                 // videoWidth isn't always set correctly in all browsers
+                 if (video.videoWidth > 0) height = video.videoHeight / (video.videoWidth / width);
+                 videoOut.setAttribute('width', width);
+                 videoOut.setAttribute('height', height);
+
+                 // Reverse the canvas image
+                 con.translate(width, 0);
+                 con.scale(-1, 1);
+                 isStreaming = true;
+             }
+         }, false);
+
+
+         video.addEventListener('play', function() {
+             // Every 33 milliseconds copy the video image to the canvas
+             setInterval(function() {
+                 if (video.paused || video.ended) return;
+                 con.fillRect(0, 0, width, height);
+                 con.drawImage(video, 0, 0, width, height);
+                 transformFace();
+             }, 33);
+         }, false);
+
+         /* navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia || navigator.oGetUserMedia;
+
+          * if (navigator.getUserMedia) {
+          *     navigator.getUserMedia(, handleVideo, () => console.log('error with webcam'));
+          * }*/
+
+         navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
+             const url = window.URL || window.webkitURL;
+             video.src = url ? url.createObjectURL(stream) : stream;
+             video.play();
+
+             //             video.srcObject = stream;
+         }).catch((error) => {
+             console.log("Error getting video.")
+         });
+
+         /* function handleVideo(stream) {
+
+          *     const track = stream.getVideoTracks()[0];
+          *     imageCapture = new ImageCapture(track);
+          *     imageCapture.grabFrame().then(frame => console.log(frame));
+          * }*/
+
+         function transformFace() {
+             var imageData = con.getImageData(0, 0, width, height);
+//             console.log(imageData.data);
          }
-
-         function handleVideo(stream) {
-             video.srcObject = stream;
-             const track = stream.getVideoTracks()[0];
-             imageCapture = new ImageCapture(track);
-         }
-
         </script>
 
-        <script async type="text/javascript" src="build/face_replace.js"></script>
+        <script async type="text/javascript" src="wasm/face_replace.js"></script>
     </body>
 
 </html>
