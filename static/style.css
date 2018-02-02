@@ -7,6 +7,10 @@ h1 {
     padding: .5em;
 }
 
+#video-out {
+    border-radius: 2em;
+}
+
 .controls {
     display: flex;
     flex-direction: row;
