@@ -3,13 +3,21 @@
     <head>
         <meta charset="utf-8">
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-        <title>Emscripten-Generated Code</title>
-
+        <title>Celetalk</title>
+        <link rel="stylesheet" type="text/css" href="static/style.css" />
     </head>
     <body>
+        <h1>Talk with a Celebrity</h1>
         <video id="video" autoplay hidden></video>
         <canvas id="video-out"></canvas>
+        <div class="controls">
+            <button>Call</button>
+            <button>Hang Up</button>
+        </div>
         <canvas id="face-canvas"></canvas>
+    </body>
+    <footer>
+        <script async type="text/javascript" src="wasm/face_replace.js"></script>
         <script type='text/javascript'>
          let video = document.querySelector("#video");
          let videoOut = document.querySelector("#video-out");
@@ -20,11 +28,13 @@
          let width = 600;
          let height = 420;
 
-         video.addEventListener('canplay', function(e) {
+         video.addEventListener('canplay', (e) => {
              if (!isStreaming) {
-
                  // videoWidth isn't always set correctly in all browsers
-                 if (video.videoWidth > 0) height = video.videoHeight / (video.videoWidth / width);
+                 if (video.videoWidth > 0) {
+                     height = video.videoHeight / (video.videoWidth / width);
+                 }
+
                  videoOut.setAttribute('width', width);
                  videoOut.setAttribute('height', height);
 
@@ -36,21 +46,18 @@
          }, false);
 
 
-         video.addEventListener('play', function() {
+         video.addEventListener('play', () => {
              // Every 33 milliseconds copy the video image to the canvas
-             setInterval(function() {
-                 if (video.paused || video.ended) return;
+             setInterval(()  => {
+                 if (video.paused || video.ended) {
+                     return;
+                 }
+
                  con.fillRect(0, 0, width, height);
                  con.drawImage(video, 0, 0, width, height);
                  transformFace();
              }, 33);
          }, false);
-
-         /* navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia || navigator.oGetUserMedia;
-
-          * if (navigator.getUserMedia) {
-          *     navigator.getUserMedia(, handleVideo, () => console.log('error with webcam'));
-          * }*/
 
          navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
              const url = window.URL || window.webkitURL;
@@ -71,11 +78,8 @@
 
          function transformFace() {
              var imageData = con.getImageData(0, 0, width, height);
-//             console.log(imageData.data);
+             //             console.log(imageData.data);
          }
         </script>
-
-        <script async type="text/javascript" src="wasm/face_replace.js"></script>
-    </body>
-
+    </footer>
 </html>
