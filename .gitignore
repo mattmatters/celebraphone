@@ -1,0 +1,5 @@
+shape_predictor_68_face_landmarks.dat
+CMakeCache.txt
+CMakeFiles
+Makefile
+cmake_install.cmake
