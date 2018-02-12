@@ -3,19 +3,25 @@
 #include <dlib/image_io.h>
 #include <dlib/image_processing/frontal_face_detector.h>
 #include <dlib/opencv.h>
+#include <dlib/pixel.h>
 #include <dlib/string.h>
+#include <emscripten/bind.h>
+#include <face-replace.hpp>
 #include <iostream>
 #include <opencv2/opencv.hpp>
-#include <emscripten/bind.h>
 
 using namespace cv;
 using namespace emscripten;
+
+int main(int argc, char **argv) {
+  std::cout << "Hello, World!" << std::endl;
+  return 0;
+}
 
 // Apply affine transform calculated using srcTri and dstTri to src
 void applyAffineTransform(cv::Mat &warpImage, cv::Mat &src,
                           std::vector<cv::Point2f> &srcTri,
                           std::vector<cv::Point2f> &dstTri) {
-
   // Given a pair of triangles, find the affine transform.
   cv::Mat warpMat = cv::getAffineTransform(srcTri, dstTri);
 
@@ -26,44 +32,49 @@ void applyAffineTransform(cv::Mat &warpImage, cv::Mat &src,
 
 // Calculate Delaunay triangles for set of points
 // Returns the vector of indices of 3 points for each triangle
-static void calculateDelaunayTriangles(cv::Rect rect, std::vector<cv::Point2f> &points,
-                                       std::vector<std::vector<int>> &delaunayTri) {
-
+static void calcDelaunayTriangles(std::vector<cv::Point2f> &points,
+                                  std::vector<std::vector<int>> &delaunayTri) {
   // Create an instance of Subdiv2D
-  cv::Subdiv2D subdiv(rect);
+  cv::Subdiv2D subdiv(cv::boundingRect(points));
 
-  // Insert points into subdiv
-  for (std::vector<cv::Point2f>::iterator it = points.begin();
-       it != points.end(); it++)
-    subdiv.insert(*it);
-
-  std::vector<cv::Vec6f> triangleList;
-  subdiv.getTriangleList(triangleList);
-  std::vector<cv::Point2f> pt(3);
-  std::vector<int> ind(3);
-
-  for (size_t i = 0; i < triangleList.size(); i++) {
-    cv::Vec6f t = triangleList[i];
-    pt[0] = cv::Point2f(t[0], t[1]);
-    pt[1] = cv::Point2f(t[2], t[3]);
-    pt[2] = cv::Point2f(t[4], t[5]);
-
-    if (rect.contains(pt[0]) && rect.contains(pt[1]) && rect.contains(pt[2])) {
-      for (int j = 0; j < 3; j++)
-        for (size_t k = 0; k < points.size(); k++)
-          if (abs(pt[j].x - points[k].x) < 1.0 &&
-              abs(pt[j].y - points[k].y) < 1)
-            ind[j] = k;
-
-      delaunayTri.push_back(ind);
+    // Insert points into subdiv
+    for (int i = 0; i < points.size(); i++) {
+      subdiv.insert(points[i]);
     }
-  }
+    //  for (std::vector<cv::Point2f>::iterator it = points.begin(); it !=
+  // points.end(); it++)
+  //   subdiv.insert(*it);
+
+  //  std::vector<cv::Vec6f> triangleList;
+  // subdiv.getTriangleList(triangleList);
+  // std::vector<cv::Point2f> pt(3);
+  // std::vector<int> ind(3);
+
+  // for (size_t i = 0; i < triangleList.size(); i++) {
+  //   cv::Vec6f t = triangleList[i];
+  //   pt[0] = cv::Point2f(t[0], t[1]);
+  //   pt[1] = cv::Point2f(t[2], t[3]);
+  //   pt[2] = cv::Point2f(t[4], t[5]);
+
+  //   if (rect.contains(pt[0]) && rect.contains(pt[1]) && rect.contains(pt[2]))
+  //   {
+  //     for (int j = 0; j < 3; j++) {
+  //       for (size_t k = 0; k < points.size(); k++) {
+  //         if (abs(pt[j].x - points[k].x) < 1.0 && abs(pt[j].y - points[k].y)
+  //         < 1) {
+  //           ind[j] = k;
+  //         }
+  //       }
+  //     }
+
+  //     delaunayTri.push_back(ind);
+  //   }
+  // }
 }
 
 // Warps and alpha blends triangular regions from img1 and img2 to img
 void warpTriangle(cv::Mat &img1, cv::Mat &img2, std::vector<cv::Point2f> &t1,
                   std::vector<cv::Point2f> &t2) {
-
   cv::Rect r1 = boundingRect(t1);
   cv::Rect r2 = boundingRect(t2);
 
@@ -95,65 +106,101 @@ void warpTriangle(cv::Mat &img1, cv::Mat &img2, std::vector<cv::Point2f> &t1,
   img2(r2) = img2(r2) + img2Rect;
 }
 
-int main(int argc, char **argv) {
-  std::cout << "Hello, World!" << std::endl;
-  return 0;
+std::string dofuckingerror(std::vector<uint8_t> baseImg, int width,
+                           int height) {
+  cv::Mat srcImg = cv::Mat(height, width, CV_8UC3, &baseImg);
+  try {
+    dlib::cv_image<dlib::bgr_pixel> cow(srcImg);
+  } catch (dlib::error e) {
+    return e.what();
+  }
+  return "all good";
 }
 
-class FaceReplace {
-  dlib::frontal_face_detector detector;
-  dlib::shape_predictor landmarker;
-  std::vector<cv::Point2f> srcPoints;
-  cv::Mat srcImg;
-  std::vector<std::vector<int>> srcTri;
+std::vector<uint8_t> drawBox(std::vector<uint8_t> baseImg, int width,
+                             int height) {
+  cv::Mat srcImg(height, width, CV_8UC3, &baseImg);
+  cv::Point pt(10, 8);
+  cv::Point pt2(1000, 2222);
+  int thickness = 80;
+  int lineType = LINE_8;
+  cv::line(srcImg, pt, pt2, cv::Scalar(255, 255, 255), thickness, lineType);
+  return baseImg;
+}
 
-private:
-  std::vector<cv::Point2f> detectPoints(cv::Mat &img, dlib::rectangle box) {
-    dlib::full_object_detection shape = landmarker(dlib::cv_image<dlib::bgr_pixel>(img), box);
-    std::vector<cv::Point2f> landmarks;
+FaceReplace::FaceReplace(std::vector<uint8_t> baseImg, int width, int height) {
+  detector = dlib::get_frontal_face_detector();
+  srcImg = cv::Mat(height, width, CV_8UC3, &baseImg);
+  dlib::deserialize("shape_predictor_68_face_landmarks.dat") >> landmarker;
+  dlib::cv_image<dlib::bgr_pixel> dImg(srcImg);
+  std::vector<dlib::rectangle> cow = detector(dImg);
+  srcPoints = detectPoints(srcImg, cow[0]);
+  //  calcDelaunayTriangles(cv::boundingRect(srcPoints), srcPoints, srcTri);
+}
 
-    // Append points and proceed with warping image
-    for (int k=0; k<shape.num_parts(); k++) {
-      landmarks.push_back(cv::Point2f(shape.part(k).x(), shape.part(k).y()));
+           int FaceReplace::getFailingPoint() {
+              // Create an instance of Subdiv2D
+  cv::Subdiv2D subdiv(cv::boundingRect(srcPoints));
+
+    // Insert points into subdiv
+    for (int i = 0; i < srcPoints.size(); i++) {
+           try {
+           subdiv.insert(srcPoints[i]);
+           } catch(std::exception e) {
+           return i;
     }
+           }
+           return 88;
+           }
+int FaceReplace::getPointCount() { return srcPoints.size(); }
+std::vector<cv::Point2f> FaceReplace::getPoints() { return srcPoints; }
+float FaceReplace::getPoint(int p) { return srcPoints[p].x; }
 
-    return landmarks;
+std::string FaceReplace::tryTriangles() {
+  try {
+    calcDelaunayTriangles(srcPoints, srcTri);
+  } catch (cv::Exception &e) {
+    return e.what();
+  }
+  return "all good";
+}
+std::vector<cv::Point2f> FaceReplace::detectPoints(cv::Mat &img,
+                                                   dlib::rectangle box) {
+  dlib::full_object_detection shape =
+      landmarker(dlib::cv_image<dlib::bgr_pixel>(img), box);
+  std::vector<cv::Point2f> landmarks;
+
+  // Append points and proceed with warping image
+  for (int k = 0; k < shape.num_parts(); k++) {
+    landmarks.push_back(cv::Point2f(shape.part(k).x(), shape.part(k).y()));
   }
 
-public:
-  FaceReplace(std::vector<uint> baseImg, int width, int height) {
-      detector = dlib::get_frontal_face_detector();
-      srcImg = cv::Mat(height, width, CV_8UC4, &baseImg);
+  return landmarks;
+}
 
-      dlib::deserialize("shape_predictor_68_face_landmarks.dat") >> landmarker;
+std::vector<uint8_t> FaceReplace::MapToFace(std::vector<uint8_t> src, int width,
+                                            int height) {
+  cv::Mat img = cv::Mat(height, width, CV_8UC3, &src);
 
-      srcPoints = detectPoints(srcImg, detector(dlib::cv_image<dlib::bgr_pixel>(srcImg))[0]);
-      calculateDelaunayTriangles(cv::boundingRect(srcPoints), srcPoints, srcTri);
-  }
-  std::vector<uint> MapToFace(std::vector<uint> src, int width, int height);
-};
-
-std::vector<uint> FaceReplace::MapToFace(std::vector<uint> src, int width, int height) {
-  cv::Mat img = cv::Mat(height, width, CV_8UC4, &src);
-
-  // Detect facesn
-  std::vector<dlib::rectangle> dets = detector(dlib::cv_image<dlib::bgr_pixel>(img));
+  // Detect faces
+  std::vector<dlib::rectangle> dets =
+      detector(dlib::cv_image<dlib::bgr_pixel>(img));
   std::vector<dlib::full_object_detection> shapes;
 
-  // Iterate over detected faces and appy face swap
+  // Iterate over detected faces and apply face swap
   for (unsigned long i = 0; i < dets.size(); ++i) {
     std::vector<std::vector<int>> delaunayTri;
     std::vector<cv::Point2f> landmarks = detectPoints(img, dets[i]);
-    cv::Rect boundingBox = cv::boundingRect(landmarks);
+    //    cv::Rect boundingBox = cv::boundingRect(landmarks);
 
-    calculateDelaunayTriangles(boundingBox, landmarks, delaunayTri);
+    calcDelaunayTriangles(landmarks, delaunayTri);
 
     // Apply affine transformation to Delaunay triangles
-    for(int j = 0; j < delaunayTri.size(); j++) {
+    for (int j = 0; j < delaunayTri.size(); j++) {
       std::vector<cv::Point2f> t1, t2;
 
       // Get corresponding points
-      for(int k = 0; k < 3; k++) {
+      for (int k = 0; k < 3; k++) {
         t1.push_back(srcPoints[srcTri[j][k]]);
         t2.push_back(landmarks[delaunayTri[j][k]]);
       }
@@ -165,20 +212,16 @@ std::vector<uint> FaceReplace::MapToFace(std::vector<uint> src, int width, int h
   return src;
 }
 
-
-EMSCRIPTEN_BINDINGS (c) {
+EMSCRIPTEN_BINDINGS(c) {
+  register_vector<uint8_t>("VectorInt");
+  function("dofuckingerror", &dofuckingerror);
+  function("drawBox", &drawBox);
   class_<FaceReplace>("FaceReplace")
-    .constructor<std::vector<uint>, int, int>()
-    .function("MapToFace", &FaceReplace::MapToFace);
-  //    .function<std::vector<uint>, int, int>("MapToFace", &FaceReplace::MapToFace);
+      .constructor<std::vector<uint8_t>, int, int>()
+      .function("MapToFace", &FaceReplace::MapToFace)
+      .function("tryTriangles", &FaceReplace::tryTriangles)
+      .function("getPointCount", &FaceReplace::getPointCount)
+      .function("getPoints", &FaceReplace::getPoints)
+      .function("getPoint", &FaceReplace::getPoint)
+  .function("getFailingPoint", &FaceReplace::getFailingPoint);
 }
-
-// FaceReplace::FaceReplace(std::vector<uint>, widthcv::Mat src) {
-//   detector = dlib::get_frontal_face_detector();
-//   dlib::deserialize("shape_predictor_68_face_landmarks.dat") >> landmarker;
-
-//   // Initialize source image
-//   srcImg = src;
-//   srcPoints = this->detectPoints(src, detector(dlib::cv_image<dlib::bgr_pixel>(src))[0]);
-//   calculateDelaunayTriangles(cv::boundingRect(srcPoints), srcPoints, srcTri);
-// }
