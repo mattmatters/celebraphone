@@ -6,6 +6,7 @@ SET(DLIB_USE_CUDA NO)
 set(OpenCV_STATIC ON)
 set(OpenCV_DIR /opencv-3.4.0/build_wasm)
 SET(PreloadPth ./shape_predictor_68_face_landmarks.dat)
+SET(PreloadPth2 ./dmx.jpg)
 find_package(OpenCV REQUIRED)
 # add_subdirectory(/dlib-19.6/dlib dlib_build)
 
@@ -37,8 +38,9 @@ else()
         target_link_libraries(color_cycle ${OpenCV_LIBS} color_cycle_lib)
 endif()
 
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 --llvm-lto 1 --bind -s ASSERTIONS=2 --memory-init-file 0 -O3") # -Oz --profiling
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s WASM=1 -s FORCE_FILESYSTEM=1 -o cow.html --preload-file ${PreloadPth} -s ALLOW_MEMORY_GROWTH=1") # WASM Stuff
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 --llvm-lto 1 --bind -s ASSERTIONS=2 --memory-init-file 0 -O1 -s DISABLE_EXCEPTION_CATCHING=0") # -Oz --profiling
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s WASM=1 --bind -s FORCE_FILESYSTEM=1 -o cow.html --preload-file ${PreloadPth} -s TOTAL_MEMORY=640000kb") # WASM Stuff
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s \"EXTRA_EXPORTED_RUNTIME_METHODS=['addOnPostRun']\"") # WASM Stuff #
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s NO_EXIT_RUNTIME=1 -o cow2.html") # reduce file size
 
 if(DEFINED CMAKE_BUILD_TYPE)
