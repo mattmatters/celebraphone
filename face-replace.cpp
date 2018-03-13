@@ -19,29 +19,25 @@ int main(int argc, char **argv) {
 }
 
 // Apply affine transform calculated using srcTri and dstTri to src
-void applyAffineTransform(cv::Mat &warpImage, cv::Mat &src,
-                          std::vector<cv::Point2f> &srcTri,
-                          std::vector<cv::Point2f> &dstTri) {
+void applyAffineTransform(cv::Mat &warpImage, cv::Mat &src, std::vector<cv::Point2f> &srcTri, std::vector<cv::Point2f> &dstTri) {
   // Given a pair of triangles, find the affine transform.
   cv::Mat warpMat = cv::getAffineTransform(srcTri, dstTri);
 
   // Apply the Affine Transform just found to the src image
-  warpAffine(src, warpImage, warpMat, warpImage.size(), cv::INTER_LINEAR,
-             cv::BORDER_REFLECT_101);
+  warpAffine(src, warpImage, warpMat, warpImage.size(), cv::INTER_LINEAR, cv::BORDER_REFLECT_101);
 }
 
 // Calculate Delaunay triangles for set of points
 // Returns the vector of indices of 3 points for each triangle
-static void calcDelaunayTriangles(std::vector<cv::Point2f> &points,
-                                  std::vector<std::vector<int>> &delaunayTri) {
-  // Create an instance of Subdiv2D
+static void calcDelaunayTriangles(std::vector<cv::Point2f> &points, std::vector<std::vector<int>> &delaunayTri) {
   cv::Subdiv2D subdiv(cv::boundingRect(points));
 
     // Insert points into subdiv
-    for (int i = 0; i < points.size(); i++) {
-      subdiv.insert(points[i]);
-    }
-    //  for (std::vector<cv::Point2f>::iterator it = points.begin(); it !=
+  for (int i = 0; i < points.size(); i++) {
+    subdiv.insert(points[i]);
+  }
+
+  //  for (std::vector<cv::Point2f>::iterator it = points.begin(); it !=
   // points.end(); it++)
   //   subdiv.insert(*it);
 
@@ -73,8 +69,7 @@ static void calcDelaunayTriangles(std::vector<cv::Point2f> &points,
 }
 
 // Warps and alpha blends triangular regions from img1 and img2 to img
-void warpTriangle(cv::Mat &img1, cv::Mat &img2, std::vector<cv::Point2f> &t1,
-                  std::vector<cv::Point2f> &t2) {
+void warpTriangle(cv::Mat &img1, cv::Mat &img2, std::vector<cv::Point2f> &t1, std::vector<cv::Point2f> &t2) {
   cv::Rect r1 = boundingRect(t1);
   cv::Rect r2 = boundingRect(t2);
 
@@ -85,8 +80,7 @@ void warpTriangle(cv::Mat &img1, cv::Mat &img2, std::vector<cv::Point2f> &t1,
   for (int i = 0; i < 3; i++) {
     t1Rect.push_back(cv::Point2f(t1[i].x - r1.x, t1[i].y - r1.y));
     t2Rect.push_back(cv::Point2f(t2[i].x - r2.x, t2[i].y - r2.y));
-    t2RectInt.push_back(
-        cv::Point(t2[i].x - r2.x, t2[i].y - r2.y)); // for fillConvexPoly
+    t2RectInt.push_back(cv::Point(t2[i].x - r2.x, t2[i].y - r2.y)); // for fillConvexPoly
   }
 
   // Get mask by filling triangle
@@ -106,8 +100,7 @@ void warpTriangle(cv::Mat &img1, cv::Mat &img2, std::vector<cv::Point2f> &t1,
   img2(r2) = img2(r2) + img2Rect;
 }
 
-std::string dofuckingerror(std::vector<uint8_t> baseImg, int width,
-                           int height) {
+std::string dofuckingerror(std::vector<uint8_t> baseImg, int width, int height) {
   cv::Mat srcImg = cv::Mat(height, width, CV_8UC3, &baseImg);
   try {
     dlib::cv_image<dlib::bgr_pixel> cow(srcImg);
@@ -117,8 +110,7 @@ std::string dofuckingerror(std::vector<uint8_t> baseImg, int width,
   return "all good";
 }
 
-std::vector<uint8_t> drawBox(std::vector<uint8_t> baseImg, int width,
-                             int height) {
+std::vector<uint8_t> drawBox(std::vector<uint8_t> baseImg, int width, int height) {
   cv::Mat srcImg(height, width, CV_8UC3, &baseImg);
   cv::Point pt(10, 8);
   cv::Point pt2(1000, 2222);
@@ -138,20 +130,20 @@ FaceReplace::FaceReplace(std::vector<uint8_t> baseImg, int width, int height) {
   //  calcDelaunayTriangles(cv::boundingRect(srcPoints), srcPoints, srcTri);
 }
 
-           int FaceReplace::getFailingPoint() {
-              // Create an instance of Subdiv2D
+int FaceReplace::getFailingPoint() {
   cv::Subdiv2D subdiv(cv::boundingRect(srcPoints));
 
-    // Insert points into subdiv
-    for (int i = 0; i < srcPoints.size(); i++) {
-           try {
-           subdiv.insert(srcPoints[i]);
-           } catch(std::exception e) {
-           return i;
+  // Insert points into subdiv
+  for (int i = 0; i < srcPoints.size(); i++) {
+    try {
+      subdiv.insert(srcPoints[i]);
+    } catch(std::exception e) {
+      return i;
     }
-           }
-           return 88;
-           }
+  }
+  return 88;
+}
+
 int FaceReplace::getPointCount() { return srcPoints.size(); }
 std::vector<cv::Point2f> FaceReplace::getPoints() { return srcPoints; }
 float FaceReplace::getPoint(int p) { return srcPoints[p].x; }
@@ -164,10 +156,8 @@ std::string FaceReplace::tryTriangles() {
   }
   return "all good";
 }
-std::vector<cv::Point2f> FaceReplace::detectPoints(cv::Mat &img,
-                                                   dlib::rectangle box) {
-  dlib::full_object_detection shape =
-      landmarker(dlib::cv_image<dlib::bgr_pixel>(img), box);
+std::vector<cv::Point2f> FaceReplace::detectPoints(cv::Mat &img, dlib::rectangle box) {
+  dlib::full_object_detection shape = landmarker(dlib::cv_image<dlib::bgr_pixel>(img), box);
   std::vector<cv::Point2f> landmarks;
 
   // Append points and proceed with warping image
@@ -178,13 +168,11 @@ std::vector<cv::Point2f> FaceReplace::detectPoints(cv::Mat &img,
   return landmarks;
 }
 
-std::vector<uint8_t> FaceReplace::MapToFace(std::vector<uint8_t> src, int width,
-                                            int height) {
+std::vector<uint8_t> FaceReplace::MapToFace(std::vector<uint8_t> src, int width, int height) {
   cv::Mat img = cv::Mat(height, width, CV_8UC3, &src);
 
   // Detect faces
-  std::vector<dlib::rectangle> dets =
-      detector(dlib::cv_image<dlib::bgr_pixel>(img));
+  std::vector<dlib::rectangle> dets = detector(dlib::cv_image<dlib::bgr_pixel>(img));
   std::vector<dlib::full_object_detection> shapes;
 
   // Iterate over detected faces and apply face swap
@@ -223,5 +211,5 @@ EMSCRIPTEN_BINDINGS(c) {
       .function("getPointCount", &FaceReplace::getPointCount)
       .function("getPoints", &FaceReplace::getPoints)
       .function("getPoint", &FaceReplace::getPoint)
-  .function("getFailingPoint", &FaceReplace::getFailingPoint);
+      .function("getFailingPoint", &FaceReplace::getFailingPoint);
 }
