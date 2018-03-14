@@ -19,9 +19,9 @@ int main(int argc, char **argv) {
 }
 
 // Apply affine transform calculated using srcTri and dstTri to src
-void applyAffineTransform(cv::Mat &warpImage, cv::Mat &src, std::vector<cv::Point2f> &srcTri, std::vector<cv::Point2f> &dstTri) {
+void applyAffineTransform(Mat &warpImage, Mat &src, std::vector<Point2f> &srcTri, std::vector<Point2f> &dstTri) {
   // Given a pair of triangles, find the affine transform.
-  cv::Mat warpMat = cv::getAffineTransform(srcTri, dstTri);
+  Mat warpMat = cv::getAffineTransform(srcTri, dstTri);
 
   // Apply the Affine Transform just found to the src image
   warpAffine(src, warpImage, warpMat, warpImage.size(), cv::INTER_LINEAR, cv::BORDER_REFLECT_101);
@@ -29,8 +29,8 @@ void applyAffineTransform(cv::Mat &warpImage, cv::Mat &src, std::vector<cv::Poin
 
 // Calculate Delaunay triangles for set of points
 // Returns the vector of indices of 3 points for each triangle
-static void calcDelaunayTriangles(std::vector<cv::Point2f> &points, std::vector<std::vector<int>> &delaunayTri) {
-  cv::Subdiv2D subdiv(cv::boundingRect(points));
+static void calcDelaunayTriangles(std::vector<Point2f> &points, std::vector<std::vector<int>> &delaunayTri) {
+  Subdiv2D subdiv(cv::boundingRect(points));
 
     // Insert points into subdiv
   for (int i = 0; i < points.size(); i++) {
@@ -69,29 +69,29 @@ static void calcDelaunayTriangles(std::vector<cv::Point2f> &points, std::vector<
 }
 
 // Warps and alpha blends triangular regions from img1 and img2 to img
-void warpTriangle(cv::Mat &img1, cv::Mat &img2, std::vector<cv::Point2f> &t1, std::vector<cv::Point2f> &t2) {
-  cv::Rect r1 = boundingRect(t1);
-  cv::Rect r2 = boundingRect(t2);
+void warpTriangle(Mat &img1, Mat &img2, std::vector<Point2f> &t1, std::vector<Point2f> &t2) {
+  Rect r1 = boundingRect(t1);
+  Rect r2 = boundingRect(t2);
 
   // Offset points by left top corner of the respective rectangles
-  std::vector<cv::Point2f> t1Rect, t2Rect;
-  std::vector<cv::Point> t2RectInt;
+  std::vector<Point2f> t1Rect, t2Rect;
+  std::vector<Point> t2RectInt;
 
   for (int i = 0; i < 3; i++) {
-    t1Rect.push_back(cv::Point2f(t1[i].x - r1.x, t1[i].y - r1.y));
-    t2Rect.push_back(cv::Point2f(t2[i].x - r2.x, t2[i].y - r2.y));
-    t2RectInt.push_back(cv::Point(t2[i].x - r2.x, t2[i].y - r2.y)); // for fillConvexPoly
+    t1Rect.push_back(Point2f(t1[i].x - r1.x, t1[i].y - r1.y));
+    t2Rect.push_back(Point2f(t2[i].x - r2.x, t2[i].y - r2.y));
+    t2RectInt.push_back(Point(t2[i].x - r2.x, t2[i].y - r2.y)); // for fillConvexPoly
   }
 
   // Get mask by filling triangle
-  cv::Mat mask = cv::Mat::zeros(r2.height, r2.width, CV_32FC3);
-  cv::fillConvexPoly(mask, t2RectInt, cv::Scalar(1.0, 1.0, 1.0), 16, 0);
+  Mat mask = Mat::zeros(r2.height, r2.width, CV_32FC3);
+  fillConvexPoly(mask, t2RectInt, cv::Scalar(1.0, 1.0, 1.0), 16, 0);
 
   // Apply warpImage to small rectangular patches
-  cv::Mat img1Rect;
+  Mat img1Rect;
   img1(r1).copyTo(img1Rect);
 
-  cv::Mat img2Rect = cv::Mat::zeros(r2.height, r2.width, img1Rect.type());
+  Mat img2Rect = Mat::zeros(r2.height, r2.width, img1Rect.type());
 
   applyAffineTransform(img2Rect, img1Rect, t1Rect, t2Rect);
 
@@ -130,8 +130,16 @@ FaceReplace::FaceReplace(std::vector<uint8_t> baseImg, int width, int height) {
   //  calcDelaunayTriangles(cv::boundingRect(srcPoints), srcPoints, srcTri);
 }
 
+int FaceReplace::getWidth() {
+  return srcImg.cols;
+}
+
+int FaceReplace::getHeight() {
+  return srcImg.rows;
+}
+
 int FaceReplace::getFailingPoint() {
-  cv::Subdiv2D subdiv(cv::boundingRect(srcPoints));
+  Subdiv2D subdiv(cv::boundingRect(srcPoints));
 
   // Insert points into subdiv
   for (int i = 0; i < srcPoints.size(); i++) {
@@ -145,7 +153,7 @@ int FaceReplace::getFailingPoint() {
 }
 
 int FaceReplace::getPointCount() { return srcPoints.size(); }
-std::vector<cv::Point2f> FaceReplace::getPoints() { return srcPoints; }
+std::vector<Point2f> FaceReplace::getPoints() { return srcPoints; }
 float FaceReplace::getPoint(int p) { return srcPoints[p].x; }
 
 std::string FaceReplace::tryTriangles() {
@@ -156,13 +164,17 @@ std::string FaceReplace::tryTriangles() {
   }
   return "all good";
 }
-std::vector<cv::Point2f> FaceReplace::detectPoints(cv::Mat &img, dlib::rectangle box) {
+
+// Things are breaking around here
+// It's something going on here, we get extremely large numbers for point coordinates
+// I think it might be point types and things getting improperly converted
+std::vector<Point2f> FaceReplace::detectPoints(Mat &img, dlib::rectangle box) {
   dlib::full_object_detection shape = landmarker(dlib::cv_image<dlib::bgr_pixel>(img), box);
-  std::vector<cv::Point2f> landmarks;
+  std::vector<Point2f> landmarks;
 
   // Append points and proceed with warping image
   for (int k = 0; k < shape.num_parts(); k++) {
-    landmarks.push_back(cv::Point2f(shape.part(k).x(), shape.part(k).y()));
+    landmarks.push_back(Point2f(shape.part(k).x(), shape.part(k).y()));
   }
 
   return landmarks;
@@ -211,5 +223,7 @@ EMSCRIPTEN_BINDINGS(c) {
       .function("getPointCount", &FaceReplace::getPointCount)
       .function("getPoints", &FaceReplace::getPoints)
       .function("getPoint", &FaceReplace::getPoint)
+      .function("getWidth", &FaceReplace::getWidth)
+      .function("getHeight", &FaceReplace::getHeight)
       .function("getFailingPoint", &FaceReplace::getFailingPoint);
 }
