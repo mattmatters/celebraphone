@@ -10,8 +10,18 @@
 #include <iostream>
 #include <opencv2/opencv.hpp>
 
-using namespace cv;
-using namespace emscripten;
+using namespace cv;         // OpenCV
+using namespace emscripten; // WASM
+
+/**
+ * This class is made to process uint8 clamped arrays being passed from the browser.
+ *
+ * A uint8 clamped array generated from a canvas images is a two dimensional array
+ * made up of by y height and x width.
+ *
+ * Each pixel comes in rgba ([red, green, blue, alpha]) format. Opencv's equivelent is
+ * CV_8UC4 and dlib's is rgb_alpha_pixel.
+ */
 
 int main(int argc, char **argv) {
   std::cout << "Hello, World!" << std::endl;
@@ -84,7 +94,7 @@ void warpTriangle(Mat &img1, Mat &img2, std::vector<Point2f> &t1, std::vector<Po
   }
 
   // Get mask by filling triangle
-  Mat mask = Mat::zeros(r2.height, r2.width, CV_32FC3);
+  Mat mask = Mat::zeros(r2.height, r2.width, CV_32FC3); // should this be CV_8UC4?
   fillConvexPoly(mask, t2RectInt, cv::Scalar(1.0, 1.0, 1.0), 16, 0);
 
   // Apply warpImage to small rectangular patches
@@ -101,9 +111,9 @@ void warpTriangle(Mat &img1, Mat &img2, std::vector<Point2f> &t1, std::vector<Po
 }
 
 std::string dofuckingerror(std::vector<uint8_t> baseImg, int width, int height) {
-  cv::Mat srcImg = cv::Mat(height, width, CV_8UC3, &baseImg);
+  cv::Mat srcImg = cv::Mat(height, width, CV_8UC4, &baseImg);
   try {
-    dlib::cv_image<dlib::bgr_pixel> cow(srcImg);
+    dlib::cv_image<dlib::rgb_alpha_pixel> cow(srcImg);
   } catch (dlib::error e) {
     return e.what();
   }
@@ -111,7 +121,7 @@ std::string dofuckingerror(std::vector<uint8_t> baseImg, int width, int height) 
 }
 
 std::vector<uint8_t> drawBox(std::vector<uint8_t> baseImg, int width, int height) {
-  cv::Mat srcImg(height, width, CV_8UC3, &baseImg);
+  cv::Mat srcImg(height, width, CV_8UC4, &baseImg);
   cv::Point pt(10, 8);
   cv::Point pt2(1000, 2222);
   int thickness = 80;
@@ -122,7 +132,7 @@ std::vector<uint8_t> drawBox(std::vector<uint8_t> baseImg, int width, int height
 
 FaceReplace::FaceReplace(std::vector<uint8_t> baseImg, int width, int height) {
   detector = dlib::get_frontal_face_detector();
-  srcImg = cv::Mat(height, width, CV_8UC3, &baseImg);
+  srcImg = cv::Mat(height, width, CV_8UC4, &baseImg);
   dlib::deserialize("shape_predictor_68_face_landmarks.dat") >> landmarker;
   dlib::cv_image<dlib::bgr_pixel> dImg(srcImg);
   std::vector<dlib::rectangle> cow = detector(dImg);
@@ -181,10 +191,10 @@ std::vector<Point2f> FaceReplace::detectPoints(Mat &img, dlib::rectangle box) {
 }
 
 std::vector<uint8_t> FaceReplace::MapToFace(std::vector<uint8_t> src, int width, int height) {
-  cv::Mat img = cv::Mat(height, width, CV_8UC3, &src);
+  cv::Mat img = cv::Mat(height, width, CV_8UC4, &src);
 
   // Detect faces
-  std::vector<dlib::rectangle> dets = detector(dlib::cv_image<dlib::bgr_pixel>(img));
+  std::vector<dlib::rectangle> dets = detector(dlib::cv_image<dlib::rgb_alpha_pixel>(img));
   std::vector<dlib::full_object_detection> shapes;
 
   // Iterate over detected faces and apply face swap
