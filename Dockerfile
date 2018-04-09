@@ -34,18 +34,6 @@ RUN wget https://github.com/opencv/opencv/archive/3.4.0.zip && \
     /bin/bash -c "source /usr/emsdk/emsdk_env.sh && \
                   python ./platforms/js/build_js.py build_wasm --build_wasm"
 
-# Install dlib
-RUN wget http://dlib.net/files/dlib-19.6.tar.bz2 && \
-    tar xvf dlib-19.6.tar.bz2 && \
-    cd dlib-19.6/ && \
-    mkdir build && \
-    cd build && \
-    cmake .. && \
-    cmake --build . --config Release && \
-    make install && \
-    ldconfig && \
-    cd ..
-
 # Update to latest cmake, current one has a nasty bug that affects the project
 RUN apt-get purge -y cmake && \
     mkdir temp-c && \
@@ -65,9 +53,8 @@ RUN apt-get purge -y cmake && \
 WORKDIR /usr/src/app
 
 RUN cd /usr/src/app
-
-RUN wget http://dlib.net/files/shape_predictor_68_face_landmarks.dat.bz2 && \
-    bzip2 -d -v shape_predictor_68_face_landmarks.dat.bz2
+RUN wget https://raw.githubusercontent.com/opencv/opencv/master/data/haarcascades/haarcascade_frontalface_alt2.xml && \
+    wget https://raw.githubusercontent.com/kurnianggoro/GSOC2017/master/data/lbfmodel.yaml
 
 COPY . .
 

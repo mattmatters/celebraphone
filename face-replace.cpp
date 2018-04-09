@@ -1,14 +1,8 @@
-#include <dlib/clustering.h>
-#include <dlib/dnn.h>
-#include <dlib/image_io.h>
-#include <dlib/image_processing/frontal_face_detector.h>
-#include <dlib/opencv.h>
-#include <dlib/pixel.h>
-#include <dlib/string.h>
 #include <emscripten/bind.h>
 #include <face-replace.hpp>
 #include <iostream>
 #include <opencv2/opencv.hpp>
+#include <opencv2/objdetect.hpp>
 
 using namespace cv;         // OpenCV
 using namespace emscripten; // WASM
@@ -110,33 +104,36 @@ void warpTriangle(Mat &img1, Mat &img2, std::vector<Point2f> &t1, std::vector<Po
   img2(r2) = img2(r2) + img2Rect;
 }
 
-std::string dofuckingerror(std::vector<uint8_t> baseImg, int width, int height) {
-  cv::Mat srcImg = cv::Mat(height, width, CV_8UC4, &baseImg);
-  try {
-    dlib::cv_image<dlib::rgb_alpha_pixel> cow(srcImg);
-  } catch (dlib::error e) {
-    return e.what();
-  }
-  return "all good";
-}
+std::vector<cv::Rect> FaceReplace::detectFaces(cv::Mat &img) {
+  Mat gray;
+  std::vector<cv::Rect> faces;
+  cvtColor(srcImg, gray, COLOR_RGBA2GRAY);
+  detector.detectMultiScale(gray, faces);
 
-std::vector<uint8_t> drawBox(std::vector<uint8_t> baseImg, int width, int height) {
-  cv::Mat srcImg(height, width, CV_8UC4, &baseImg);
-  cv::Point pt(10, 8);
-  cv::Point pt2(1000, 2222);
-  int thickness = 80;
-  int lineType = LINE_8;
-  cv::line(srcImg, pt, pt2, cv::Scalar(255, 255, 255), thickness, lineType);
-  return baseImg;
+  return faces;
 }
 
 FaceReplace::FaceReplace(std::vector<uint8_t> baseImg, int width, int height) {
-  detector = dlib::get_frontal_face_detector();
+  // Load Face Detector
+  detector = CascadeClassifier("./haarcascade_frontalface_alt2.xml");
+
+  // Load landmark detector
+  // landmarker = FacemarkLBF::create();
+  // landmarker->loadModel("lbfmodel.yaml");
+
+  // Load image
   srcImg = cv::Mat(height, width, CV_8UC4, &baseImg);
-  dlib::deserialize("shape_predictor_68_face_landmarks.dat") >> landmarker;
-  dlib::cv_image<dlib::bgr_pixel> dImg(srcImg);
-  std::vector<dlib::rectangle> cow = detector(dImg);
-  srcPoints = detectPoints(srcImg, cow[0]);
+
+  // Detect faces
+  std::vector<cv::Rect> faces = detectFaces(srcImg);
+
+  // Detect image
+  // srcPoints = detectPoints(srcImg, cow[0]);
+
+  // std::vector<std::vector<Point2f>> landmarks;
+  // facemark->fit(frame,faces,landmarks);
+  // srcPoints = landmarks[0];
+
   //  calcDelaunayTriangles(cv::boundingRect(srcPoints), srcPoints, srcTri);
 }
 
@@ -178,54 +175,48 @@ std::string FaceReplace::tryTriangles() {
 // Things are breaking around here
 // It's something going on here, we get extremely large numbers for point coordinates
 // I think it might be point types and things getting improperly converted
-std::vector<Point2f> FaceReplace::detectPoints(Mat &img, dlib::rectangle box) {
-  dlib::full_object_detection shape = landmarker(dlib::cv_image<dlib::bgr_pixel>(img), box);
-  std::vector<Point2f> landmarks;
-
-  // Append points and proceed with warping image
-  for (int k = 0; k < shape.num_parts(); k++) {
-    landmarks.push_back(Point2f(shape.part(k).x(), shape.part(k).y()));
-  }
-
-  return landmarks;
+std::vector<Point2f> FaceReplace::detectPoints(Mat &img, cv::Rect box) {
+  std::vector<Point2f> todo;
+  return todo;
 }
 
 std::vector<uint8_t> FaceReplace::MapToFace(std::vector<uint8_t> src, int width, int height) {
   cv::Mat img = cv::Mat(height, width, CV_8UC4, &src);
 
   // Detect faces
-  std::vector<dlib::rectangle> dets = detector(dlib::cv_image<dlib::rgb_alpha_pixel>(img));
-  std::vector<dlib::full_object_detection> shapes;
+  std::vector<cv::Rect> dets = detectFaces(img);
 
-  // Iterate over detected faces and apply face swap
-  for (unsigned long i = 0; i < dets.size(); ++i) {
-    std::vector<std::vector<int>> delaunayTri;
-    std::vector<cv::Point2f> landmarks = detectPoints(img, dets[i]);
-    //    cv::Rect boundingBox = cv::boundingRect(landmarks);
+  // std::vector<dlib::full_object_detection> shapes;
 
-    calcDelaunayTriangles(landmarks, delaunayTri);
+  // // Iterate over detected faces and apply face swap
+  // for (unsigned long i = 0; i < dets.size(); ++i) {
+  //   std::vector<std::vector<int>> delaunayTri;
+  //   std::vector<cv::Point2f> landmarks = detectPoints(img, dets[i]);
+  //   //    cv::Rect boundingBox = cv::boundingRect(landmarks);
 
-    // Apply affine transformation to Delaunay triangles
-    for (int j = 0; j < delaunayTri.size(); j++) {
-      std::vector<cv::Point2f> t1, t2;
+  //   calcDelaunayTriangles(landmarks, delaunayTri);
 
-      // Get corresponding points
-      for (int k = 0; k < 3; k++) {
-        t1.push_back(srcPoints[srcTri[j][k]]);
-        t2.push_back(landmarks[delaunayTri[j][k]]);
-      }
+  //   // Apply affine transformation to Delaunay triangles
+  //   for (int j = 0; j < delaunayTri.size(); j++) {
+  //     std::vector<cv::Point2f> t1, t2;
 
-      warpTriangle(srcImg, img, t1, t2);
-    }
-  }
+  //     // Get corresponding points
+  //     for (int k = 0; k < 3; k++) {
+  //       t1.push_back(srcPoints[srcTri[j][k]]);
+  //       t2.push_back(landmarks[delaunayTri[j][k]]);
+  //     }
+
+  //     warpTriangle(srcImg, img, t1, t2);
+  //   }
+  // }
 
   return src;
 }
 
 EMSCRIPTEN_BINDINGS(c) {
   register_vector<uint8_t>("VectorInt");
-  function("dofuckingerror", &dofuckingerror);
-  function("drawBox", &drawBox);
+  //  function("dofuckingerror", &dofuckingerror);
+  //  function("drawBox", &drawBox);
   class_<FaceReplace>("FaceReplace")
       .constructor<std::vector<uint8_t>, int, int>()
       .function("MapToFace", &FaceReplace::MapToFace)

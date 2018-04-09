@@ -1,19 +1,17 @@
-#include <dlib/clustering.h>
-#include <dlib/dnn.h>
-#include <dlib/image_io.h>
-#include <dlib/image_processing/frontal_face_detector.h>
-#include <dlib/opencv.h>
-#include <dlib/string.h>
 #include <opencv2/opencv.hpp>
+#include <opencv2/objdetect.hpp>
+
+using namespace cv;
 
 class FaceReplace {
-  dlib::frontal_face_detector detector;
-  dlib::shape_predictor landmarker;
+  CascadeClassifier detector;
+  //  Ptr<Facemark> facemark;
   cv::Mat srcImg;
   std::vector<std::vector<int>> srcTri;
   std::vector<cv::Point2f> srcPoints;
 private:
-  std::vector<cv::Point2f> detectPoints(cv::Mat &img, dlib::rectangle box);
+  std::vector<cv::Point2f> detectPoints(cv::Mat &img, cv::Rect box);
+  std::vector<cv::Rect> detectFaces(cv::Mat &img);
 public:
   int getPointCount();
   int getWidth();
