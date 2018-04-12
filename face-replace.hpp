@@ -7,15 +7,21 @@
 #include <opencv2/opencv.hpp>
 
 class FaceReplace {
-  dlib::frontal_face_detector detector;
+  cv::CascadeClassifier detector;
   dlib::shape_predictor landmarker;
   cv::Mat srcImg;
   std::vector<std::vector<int>> srcTri;
   std::vector<cv::Point2f> srcPoints;
+  std::vector<uint8_t> stuff;
 private:
-  std::vector<cv::Point2f> detectPoints(cv::Mat &img, dlib::rectangle box);
+  std::vector<cv::Point2f> detectPoints(dlib::cv_image<dlib::bgr_pixel> &img, dlib::rectangle box);
+  std::vector<cv::Point2f> detectFace(cv::Mat &img);
+  cv::Mat initImg(std::vector<uint8_t> img, int width, int height);
+  void applyAffineTransform(cv::Mat &warpImage, cv::Mat &src, std::vector<cv::Point2f> &srcTri, std::vector<cv::Point2f> &dstTri);
 public:
   int getPointCount();
+  //  int detectpoop(int k);
+  std::string showImg(std::string img);
   int getWidth();
   int getHeight();
   std::vector<cv::Point2f> getPoints();

@@ -69,6 +69,8 @@ RUN cd /usr/src/app
 RUN wget http://dlib.net/files/shape_predictor_68_face_landmarks.dat.bz2 && \
     bzip2 -d -v shape_predictor_68_face_landmarks.dat.bz2
 
+RUN wget https://raw.githubusercontent.com/opencv/opencv/master/data/haarcascades/haarcascade_frontalface_alt2.xml
+
 COPY . .
 
 # Set up for building
