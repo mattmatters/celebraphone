@@ -9,24 +9,77 @@
     <body>
         <h1>Talk with a Celebrity</h1>
         <video id="video" autoplay hidden></video>
-        <canvas id="video-out"></canvas>
+        <canvas id="output" height="420" width="600"></canvas>
         <div class="controls">
             <button>Call</button>
             <button>Hang Up</button>
         </div>
-        <canvas id="face-canvas"></canvas>
+        <canvas hidden id="video-out"></canvas>
+        <canvas hidden id="face-canvas"></canvas>
     </body>
     <footer>
-        <script async type="text/javascript" src="wasm/face_replace.js"></script>
+        <script type="text/javascript" src="face_replace.js"></script>
         <script type='text/javascript'>
          let video = document.querySelector("#video");
          let videoOut = document.querySelector("#video-out");
+         let outCan = document.querySelector("#output");
          let faceCanvas = document.querySelector("#face-canvas");
          let con = videoOut.getContext('2d');
+         let conOut = outCan.getContext('2d');
          let faceCon = faceCanvas.getContext('2d');
          let isStreaming = false;
+         let wasmLoaded = false;
+         let faceReplacer = false;
          let width = 600;
          let height = 420;
+         let srcWidth = 0;
+         let srcHeight = 0;
+
+         function _arrayToHeap(typedArray){
+             var numBytes = typedArray.length * typedArray.BYTES_PER_ELEMENT;
+             var ptr = Module._malloc(numBytes);
+             var heapBytes = new Uint8Array(Module.HEAPU8.buffer, ptr, numBytes);
+             heapBytes.set(new Uint8Array(typedArray.buffer));
+             return heapBytes;
+         }
+
+         function _freeArray(heapBytes){
+             Module._free(heapBytes.byteOffset);
+         }
+
+         function loadImageFile(url) {
+             var image = new Image();
+             image.src = url;
+             return new Promise((accept, reject) => {
+                 image.onload = accept;
+                 image.onerror = reject;
+             }).then(accept => {
+                 srcWidth = image.width;
+                 srcHeight = image.height;
+                 faceCanvas.width = image.width;
+                 faceCanvas.height = image.height;
+                 faceCon.clearRect(0, 0, image.width, image.height);
+                 faceCon.drawImage(image, 0, 0);
+             });
+         }
+
+         Module.addOnPostRun(() => {
+             loadImageFile('static/dmx.jpg').then(() => {
+                 var imageData = faceCon.getImageData(0, 0, srcWidth, srcHeight);
+
+                 // Init vector
+                 var y = new Module.VectorInt();
+                 for (let i = 0; i < imageData.data.length; i++) {
+                     y.push_back(imageData.data[i]);
+                 }
+
+                 // Create module
+                 faceReplacer = new Module.FaceReplace(y, imageData.width, imageData.height);
+                 console.log("done");
+                 console.log(faceReplacer.tryTriangles());
+                 wasmLoaded = true;
+             });
+         });
 
          video.addEventListener('canplay', (e) => {
              if (!isStreaming) {
@@ -55,8 +108,10 @@
 
                  con.fillRect(0, 0, width, height);
                  con.drawImage(video, 0, 0, width, height);
-                 transformFace();
-             }, 33);
+                 if (wasmLoaded) {
+                     transformFace();
+                 }
+             }, 200);
          }, false);
 
          navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
@@ -66,7 +121,7 @@
 
              //             video.srcObject = stream;
          }).catch((error) => {
-             console.log("Error getting video.")
+             console.log(error);
          });
 
          /* function handleVideo(stream) {
@@ -78,8 +133,22 @@
 
          function transformFace() {
              var imageData = con.getImageData(0, 0, width, height);
-             //             console.log(imageData.data);
-         }
+             // Init vector
+             var y = new Module.VectorInt();
+             for (let i = 0; i < imageData.data.length; i++) {
+                 y.push_back(imageData.data[i]);
+             }
+
+             faceReplacer.MapToFace(y, imageData.width, imageData.height);
+
+             // Overwrite image data
+             for (let j = 0; j < y.size(); j++) {
+                 imageData.data[j] = y.get(j);
+             }
+             Module._free(y);
+             conOut.clearRect(0, 0, imageData.width, imageData.height);
+             conOut.putImageData(imageData, 0, 0);
+         };
         </script>
     </footer>
 </html>
