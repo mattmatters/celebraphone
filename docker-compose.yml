@@ -5,7 +5,7 @@ services:
       context: .
       dockerfile: server
     ports:
-      - "8080:80"
+      - "8081:80"
     volumes:
       - ./:/usr/share/nginx/html
   wasm:
