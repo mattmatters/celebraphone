@@ -3,3 +3,9 @@ CMakeCache.txt
 CMakeFiles
 Makefile
 cmake_install.cmake
+haarcascade_frontalface_alt2.xml
+face_replace.data
+face_replace.js
+face_replace.wasm
+.DS_Store
+CopyOfCMakeCache.txt
