@@ -37,25 +37,19 @@ static dlib::rectangle openCVRectToDlib(cv::Rect r)
 static void applyAffineTransform(Mat &warpImage, Mat &src, std::vector<Point2f> &srcTri, std::vector<Point2f> &dstTri) {
   // Given a pair of triangles, find the affine transform.
   Mat warpMat = cv::getAffineTransform(srcTri, dstTri);
-
-  // Apply the Affine Transform just found to the src image
   cv::warpAffine(src, warpImage, warpMat, warpImage.size(), cv::INTER_LINEAR, cv::BORDER_REFLECT_101);
 }
 
 // Calculate Delaunay triangles for set of points
 // Returns the vector of indices of 3 points for each triangle
-static void calcDelaunayTriangles(std::vector<Point2f> &points, std::vector<std::vector<int>> &delaunayTri) {
+static void calcDelaunayTriangles(std::vector<Point2f> points, std::vector<std::vector<int>> &delaunayTri) {
   cv::Rect rect = cv::boundingRect(points);
   cv::Subdiv2D subdiv(rect);
 
-    // Insert points into subdiv
-  for (int i = 0; i < points.size(); i++) {
-    subdiv.insert(points[i]);
+  // Insert points into subdiv
+  for (std::vector<cv::Point2f>::iterator it = points.begin(); it != points.end(); it++) {
+    subdiv.insert(*it);
   }
-
-  //  for (std::vector<cv::Point2f>::iterator it = points.begin(); it !=
-  // points.end(); it++)
-  //   subdiv.insert(*it);
 
   std::vector<cv::Point2f> pt(3);
   std::vector<int> ind(3);
@@ -113,83 +107,76 @@ void warpTriangle(Mat &img1, Mat &img2, std::vector<Point2f> &t1, std::vector<Po
   // multiply(img2(r2), cv::Scalar(1.0, 1.0, 1.0) - mask, img2(r2));
   // img2(r2) = img2(r2) + img2Rect;
 }
-// openCV Error: Assertion failed (0 <= roi.x && 0 <= roi.width && roi.x + roi.width <= m.cols && 0 <= roi.y && 0 <= roi.height && roi.y + roi.height <= m.rows) in Mat, file /opencv-3.4.0/modules/core/src/matrix.cpp, line 538
+
 FaceReplace::FaceReplace(std::vector<uint8_t> baseImg, int width, int height) {
   dlib::deserialize("shape_predictor_68_face_landmarks.dat") >> landmarker;
   faceDetector.load( "haarcascade_frontalface_alt2.xml");
-  srcImg = cv::Mat(height, width, CV_8UC4, &baseImg);
+  srcImg = cv::Mat(height, width, CV_8UC(4), baseImg.data());
+  debug = false;
   std::vector<cv::Rect> faces = detectFaces(srcImg);
   srcPoints = detectLandmarks(srcImg, faces[0]);
 
   // Convert to bgr
-  // cv::Mat grey;
-  // cv::cvtColor(srcImg, grey, COLOR_RGBA2GRAY);
+  cv::Mat grey;
+  cv::cvtColor(srcImg, grey, COLOR_RGBA2GRAY);
 
-  //  calcDelaunayTriangles(srcPoints, srcTri);
+  calcDelaunayTriangles(srcPoints, srcTri);
 }
-
 
 void FaceReplace::MapToFace(std::vector<uint8_t> &src, int width, int height) {
   cv::Mat img(height, width, CV_8UC(4), src.data());
   std::vector<cv::Rect> faces = detectFaces(img);
+  std::vector<std::vector<int>> delaunayTri;
 
-  for (int i = 0; i < faces.size(); i++) {
-    std::vector<cv::Point2f> landmarks = detectLandmarks(img, faces[i]);
-    std::vector<std::vector<int>> delaunayTri;
-
-    for (int j = 0; j < landmarks.size(); j++) {
-      cv::circle(img, landmarks[j], 4, Scalar( 89, 200, 27));
-    }
+  if (faces.size() == 0) {
+    return;
   }
 
-  // calcDelaunayTriangles(landmarks, delaunayTri);
+  std::vector<cv::Point2f> landmarks = detectLandmarks(img, faces[0]);
+  calcDelaunayTriangles(landmarks, delaunayTri);
 
-  // // Apply affine transformation to Delaunay triangles
-  // for (int j = 0; j < delaunayTri.size(); j++) {
-  //   std::vector<cv::Point2f> t1, t2;
+  if (debug == true) {
+    drawPoints(img, landmarks);
+  }
 
-  //   // Get corresponding points
-  //   for (int k = 0; k < 3; k++) {
-  //     t1.push_back(srcPoints[srcTri[j][k]]);
-  //     t2.push_back(landmarks[delaunayTri[j][k]]);
-  //   }
+  // Apply affine transformation to Delaunay triangles
+  for (int j = 0; j < delaunayTri.size(); j++) {
+    std::vector<cv::Point2f> t1, t2;
 
-  //   warpTriangle(srcImg, img, t1, t2);
-  // }
-  //  std::vector<uint8_t> srcNew;
+    // Get corresponding points
+    for (int k = 0; k < 3; k++) {
+      t1.push_back(srcPoints[srcTri[j][k]]);
+      t2.push_back(landmarks[delaunayTri[j][k]]);
+    }
 
-  // for(int row = 0; row < img.rows; ++row) {
-  //   uchar* p = img.ptr(row);
-  //   for(int col = 0; col < img.cols; ++col) {
-  //     for(int channel = 0; channel < 4; ++channel) {
-  //       srcNew.push_back((uint8_t)*p);
-  //       *p++;  //points to each pixel B,G,R value in turn assuming a CV_8UC4 color image
-  //     }
-  //   }
-  // }
+    if (debug == true) {
+      drawTriangle(img, t2);
+    }
 
-   // uchar* p = img.data;
-   // int j = 0;
-   // for(int i = 0; i < img.cols * img.rows * 4; i++)
-   //  {
-   //    //operations using *data
-   //    src[j] = (uint8_t)*p;
-   //    //      srcNew.push_back((uint8_t)*p);
-   //    p++;
-   //    j++;
-   //  }
-
-  // for (int y = 0; y < height; y++) {
-  //   for (int x = 0; x < width; x++) {
-  //     cv::Vec4b pixel = img.at<cv::Vec4b>(cv::Point(y, x));
-  //     for (int k = 0; k < 4; k++) {
-  //       //        srcNew.push_back((uint8_t)pixel[k]);
-  //       src[i] = (uint8_t)pixel[k];
-  //       i++;
-  //     }
-  //   }
-  // }
+    warpTriangle(srcImg, img, t1, t2);
+  }
 }
+
+void FaceReplace::DebugMode(bool debugMode) {
+  debug = debugMode;
+}
+
+void FaceReplace::drawPoints(cv::Mat &img, std::vector<cv::Point2f> points) {
+  for (int j = 0; j < points.size(); j++) {
+    cv::circle(img, points[j], 4, Scalar( 89, 200, 27));
+  }
+}
+
+void FaceReplace::drawTriangle(cv::Mat &img, std::vector<cv::Point2f> points) {
+  if (points.size() < 3) {
+    return;
+  }
+
+  cv::line(img, points[0], points[1], Scalar( 89, 200, 27));
+  cv::line(img, points[1], points[2], Scalar( 89, 200, 27));
+  cv::line(img, points[2], points[0], Scalar( 89, 200, 27));
+}
+
 
 std::vector<cv::Point2f> FaceReplace::detectLandmarks(cv::Mat &img, cv::Rect face) {
   std::vector<cv::Point2f> points;
@@ -241,19 +228,9 @@ std::string FaceReplace::tryTriangles() {
     calcDelaunayTriangles(srcPoints, srcTri);
   } catch (std::exception &e) {
     return e.what();
-  }
+   }
   return "all good";
 }
-
-// std::vector<uint8_t> drawBox(std::vector<uint8_t> baseImg, int width, int height) {
-//   cv::Mat srcImg(height, width, CV_8UC4, &baseImg);
-//   cv::Point pt(10, 8);
-//   cv::Point pt2(1000, 2222);
-//   int thickness = 80;
-//   int lineType = LINE_8;
-//   cv::line(srcImg, pt, pt2, cv::Scalar(255, 255, 255), thickness, lineType);
-//   return baseImg;
-// }
 
 EMSCRIPTEN_BINDINGS(c) {
   register_vector<uint8_t>("VectorInt");
@@ -266,6 +243,7 @@ EMSCRIPTEN_BINDINGS(c) {
     .function("tryTriangles", &FaceReplace::tryTriangles)
     .function("getPointCount", &FaceReplace::getPointCount)
     .function("getPoints", &FaceReplace::getPoints)
+    .function("DebugMode", &FaceReplace::DebugMode)
     .function("getPoint", &FaceReplace::getPoint)
     .function("getWidth", &FaceReplace::getWidth)
     .function("getHeight", &FaceReplace::getHeight)

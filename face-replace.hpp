@@ -7,6 +7,7 @@
 #include <opencv2/opencv.hpp>
 
 class FaceReplace {
+  bool debug;
   cv::CascadeClassifier detector;
   dlib::shape_predictor landmarker;
   cv::Mat srcImg;
@@ -17,12 +18,14 @@ class FaceReplace {
 private:
   std::vector<cv::Point2f> detectPoints(dlib::cv_image<dlib::bgr_pixel> &img, dlib::rectangle box);
   std::vector<cv::Point2f> detectLandmarks(cv::Mat &img, cv::Rect face);
+  void drawPoints(cv::Mat &img, std::vector<cv::Point2f> points);
+  void drawTriangle(cv::Mat &img, std::vector<cv::Point2f> points);
   std::vector<cv::Rect> detectFaces(cv::Mat &img);
   cv::Mat initImg(std::vector<uint8_t> img, int width, int height);
   void applyAffineTransform(cv::Mat &warpImage, cv::Mat &src, std::vector<cv::Point2f> &srcTri, std::vector<cv::Point2f> &dstTri);
 public:
+  void DebugMode(bool debugMode);
   int getPointCount();
-  //  int detectpoop(int k);
   std::string showImg(std::string img);
   int getWidth();
   int getHeight();
