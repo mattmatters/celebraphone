@@ -28,13 +28,31 @@ int main(int argc, char **argv) {
   return 0;
 }
 
+// Helper function, eases conversion between two formats
 static dlib::rectangle openCVRectToDlib(cv::Rect r)
 {
   return dlib::rectangle((long)r.tl().x, (long)r.tl().y, (long)r.br().x - 1, (long)r.br().y - 1);
 }
 
+void drawPoints(cv::Mat &img, std::vector<cv::Point2f> points) {
+  for (int j = 0; j < points.size(); j++) {
+    cv::circle(img, points[j], 4, Scalar( 89, 200, 27));
+  }
+}
+
+void drawTriangle(cv::Mat &img, std::vector<cv::Point2f> points) {
+  if (points.size() < 3) {
+    return;
+  }
+
+  cv::line(img, points[0], points[1], Scalar( 89, 200, 27));
+  cv::line(img, points[1], points[2], Scalar( 89, 200, 27));
+  cv::line(img, points[2], points[0], Scalar( 89, 200, 27));
+}
+
 // Apply affine transform calculated using srcTri and dstTri to src
-static void applyAffineTransform(Mat &warpImage, Mat &src, std::vector<Point2f> &srcTri, std::vector<Point2f> &dstTri) {
+static void applyAffineTransform(Mat &warpImage, Mat &src, std::vector<Point2f> &srcTri, std::vector<Point2f> &dstTri)
+{
   // Given a pair of triangles, find the affine transform.
   Mat warpMat = cv::getAffineTransform(srcTri, dstTri);
   cv::warpAffine(src, warpImage, warpMat, warpImage.size(), cv::INTER_LINEAR, cv::BORDER_REFLECT_101);
@@ -42,7 +60,8 @@ static void applyAffineTransform(Mat &warpImage, Mat &src, std::vector<Point2f> 
 
 // Calculate Delaunay triangles for set of points
 // Returns the vector of indices of 3 points for each triangle
-static void calcDelaunayTriangles(std::vector<Point2f> points, std::vector<std::vector<int>> &delaunayTri) {
+static void calcDelaunayTriangles(std::vector<Point2f> points, std::vector<std::vector<int>> &delaunayTri)
+{
   cv::Rect rect = cv::boundingRect(points);
   cv::Subdiv2D subdiv(rect);
 
@@ -77,7 +96,7 @@ static void calcDelaunayTriangles(std::vector<Point2f> points, std::vector<std::
 }
 
 // Warps and alpha blends triangular regions from img1 and img2 to img
-void warpTriangle(Mat &img1, Mat &img2, std::vector<Point2f> &t1, std::vector<Point2f> &t2) {
+void warpTriangle(Mat &img1, Mat &img2, std::vector<Point2f> t1, std::vector<Point2f> t2) {
   cv::Rect r1 = boundingRect(t1);
   cv::Rect r2 = boundingRect(t2);
 
@@ -93,34 +112,31 @@ void warpTriangle(Mat &img1, Mat &img2, std::vector<Point2f> &t1, std::vector<Po
 
   // Get mask by filling triangle
   Mat mask = Mat::zeros(r2.height, r2.width, CV_8UC4); // should this be CV_8UC4?
-  fillConvexPoly(mask, t2RectInt, cv::Scalar(1.0, 1.0, 1.0), 16, 0);
+  fillConvexPoly(mask, t2RectInt, cv::Scalar(1.0, 1.0, 1.0, 1.0), 16, 0);
 
   // Apply warpImage to small rectangular patches
   Mat img1Rect;
   img1(r1).copyTo(img1Rect);
 
-  Mat img2Rect = Mat::zeros(r2.height, r2.width, img1Rect.type());
+  Mat img2Rect = Mat::zeros(r2.height, r2.width, CV_8UC4);//img1Rect.type());
 
-  // applyAffineTransform(img2Rect, img1Rect, t1Rect, t2Rect);
+  applyAffineTransform(img2Rect, img1Rect, t1Rect, t2Rect);
 
-  // multiply(img2Rect, mask, img2Rect);
-  // multiply(img2(r2), cv::Scalar(1.0, 1.0, 1.0) - mask, img2(r2));
-  // img2(r2) = img2(r2) + img2Rect;
+  multiply(img2Rect, mask, img2Rect);
+  multiply(img2(r2), cv::Scalar(1.0, 1.0, 1.0, 1.0) - mask, img2(r2));
+  img2(r2) = img2(r2) + img2Rect;
 }
 
-FaceReplace::FaceReplace(std::vector<uint8_t> baseImg, int width, int height) {
+FaceReplace::FaceReplace(std::vector<uint8_t> &baseImg, int width, int height) {
+  // Init detector
   dlib::deserialize("shape_predictor_68_face_landmarks.dat") >> landmarker;
   faceDetector.load( "haarcascade_frontalface_alt2.xml");
+
   srcImg = cv::Mat(height, width, CV_8UC(4), baseImg.data());
   debug = false;
+
   std::vector<cv::Rect> faces = detectFaces(srcImg);
   srcPoints = detectLandmarks(srcImg, faces[0]);
-
-  // Convert to bgr
-  cv::Mat grey;
-  cv::cvtColor(srcImg, grey, COLOR_RGBA2GRAY);
-
-  calcDelaunayTriangles(srcPoints, srcTri);
 }
 
 void FaceReplace::MapToFace(std::vector<uint8_t> &src, int width, int height) {
@@ -145,7 +161,7 @@ void FaceReplace::MapToFace(std::vector<uint8_t> &src, int width, int height) {
 
     // Get corresponding points
     for (int k = 0; k < 3; k++) {
-      t1.push_back(srcPoints[srcTri[j][k]]);
+      t1.push_back(srcPoints[delaunayTri[j][k]]);
       t2.push_back(landmarks[delaunayTri[j][k]]);
     }
 
@@ -160,23 +176,6 @@ void FaceReplace::MapToFace(std::vector<uint8_t> &src, int width, int height) {
 void FaceReplace::DebugMode(bool debugMode) {
   debug = debugMode;
 }
-
-void FaceReplace::drawPoints(cv::Mat &img, std::vector<cv::Point2f> points) {
-  for (int j = 0; j < points.size(); j++) {
-    cv::circle(img, points[j], 4, Scalar( 89, 200, 27));
-  }
-}
-
-void FaceReplace::drawTriangle(cv::Mat &img, std::vector<cv::Point2f> points) {
-  if (points.size() < 3) {
-    return;
-  }
-
-  cv::line(img, points[0], points[1], Scalar( 89, 200, 27));
-  cv::line(img, points[1], points[2], Scalar( 89, 200, 27));
-  cv::line(img, points[2], points[0], Scalar( 89, 200, 27));
-}
-
 
 std::vector<cv::Point2f> FaceReplace::detectLandmarks(cv::Mat &img, cv::Rect face) {
   std::vector<cv::Point2f> points;
@@ -217,36 +216,25 @@ int FaceReplace::getFailingPoint() {
   return 88;
 }
 
+
 int FaceReplace::getWidth() { return srcImg.cols; }
 int FaceReplace::getHeight() { return srcImg.rows; }
 int FaceReplace::getPointCount() { return srcPoints.size(); }
 std::vector<cv::Point2f> FaceReplace::getPoints() { return srcPoints; }
 float FaceReplace::getPoint(int p) { return srcPoints.at(p).x; }
 
-std::string FaceReplace::tryTriangles() {
-  try {
-    calcDelaunayTriangles(srcPoints, srcTri);
-  } catch (std::exception &e) {
-    return e.what();
-   }
-  return "all good";
-}
-
 EMSCRIPTEN_BINDINGS(c) {
   register_vector<uint8_t>("VectorInt");
   //  function("dofuckingerror", &dofuckingerror);
   //  function("drawBox", &drawBox);
   class_<FaceReplace>("FaceReplace")
-    .constructor<std::vector<uint8_t>, int, int>()
+    .constructor<std::vector<uint8_t>&, int, int>()
     .function("MapToFace", &FaceReplace::MapToFace)
-    //    .function("detectpoop", &FaceReplace::detectpoop)
-    .function("tryTriangles", &FaceReplace::tryTriangles)
     .function("getPointCount", &FaceReplace::getPointCount)
     .function("getPoints", &FaceReplace::getPoints)
     .function("DebugMode", &FaceReplace::DebugMode)
     .function("getPoint", &FaceReplace::getPoint)
     .function("getWidth", &FaceReplace::getWidth)
     .function("getHeight", &FaceReplace::getHeight)
-    //    .function("showImg", &FaceReplace::showImg)
     .function("getFailingPoint", &FaceReplace::getFailingPoint);
 }

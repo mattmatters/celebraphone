@@ -35,18 +35,6 @@
          let srcWidth = 0;
          let srcHeight = 0;
 
-         function _arrayToHeap(typedArray){
-             var numBytes = typedArray.length * typedArray.BYTES_PER_ELEMENT;
-             var ptr = Module._malloc(numBytes);
-             var heapBytes = new Uint8Array(Module.HEAPU8.buffer, ptr, numBytes);
-             heapBytes.set(new Uint8Array(typedArray.buffer));
-             return heapBytes;
-         }
-
-         function _freeArray(heapBytes){
-             Module._free(heapBytes.byteOffset);
-         }
-
          function loadImageFile(url) {
              var image = new Image();
              image.src = url;
@@ -64,19 +52,18 @@
          }
 
          Module.addOnPostRun(() => {
-             loadImageFile('static/dmx.jpg').then(() => {
+             loadImageFile('static/steve.jpg').then(() => {
                  var imageData = faceCon.getImageData(0, 0, srcWidth, srcHeight);
 
                  // Init vector
-                 var y = new Module.VectorInt();
+                 let dat = new Module.VectorInt();
                  for (let i = 0; i < imageData.data.length; i++) {
-                     y.push_back(imageData.data[i]);
+                     dat.push_back(imageData.data[i]);
                  }
 
                  // Create module
-                 faceReplacer = new Module.FaceReplace(y, imageData.width, imageData.height);
+                 faceReplacer = new Module.FaceReplace(dat, imageData.width, imageData.height);
                  console.log("done");
-                 console.log(faceReplacer.tryTriangles());
                  wasmLoaded = true;
              });
          });
@@ -118,36 +105,33 @@
              const url = window.URL || window.webkitURL;
              video.src = url ? url.createObjectURL(stream) : stream;
              video.play();
-
-             //             video.srcObject = stream;
          }).catch((error) => {
              console.log(error);
          });
 
-         /* function handleVideo(stream) {
-
-          *     const track = stream.getVideoTracks()[0];
-          *     imageCapture = new ImageCapture(track);
-          *     imageCapture.grabFrame().then(frame => console.log(frame));
-          * }*/
-
          function transformFace() {
+             console.time('all');
              var imageData = con.getImageData(0, 0, width, height);
              // Init vector
+             console.time('malloc');
              var y = new Module.VectorInt();
              for (let i = 0; i < imageData.data.length; i++) {
                  y.push_back(imageData.data[i]);
              }
-
+             console.timeEnd('malloc');
+             console.time('face');
              faceReplacer.MapToFace(y, imageData.width, imageData.height);
+             console.timeEnd('face');
 
              // Overwrite image data
              for (let j = 0; j < y.size(); j++) {
                  imageData.data[j] = y.get(j);
              }
+
              Module._free(y);
              conOut.clearRect(0, 0, imageData.width, imageData.height);
              conOut.putImageData(imageData, 0, 0);
+             console.timeEnd('all');
          };
         </script>
     </footer>
