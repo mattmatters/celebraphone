@@ -1,6 +1,14 @@
 version: "3.1"
 services:
+  wasm:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - fun:/usr/src/app/web
   devserver:
+    depends_on:
+      - wasm
     ports:
       - "8080:80"
     build:
@@ -8,12 +16,5 @@ services:
       dockerfile: server
     volumes:
       - fun:/usr/share/nginx/html
-  wasm:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    volumes:
-      - fun:/usr/src/app/web
-      - ./web:/usr/src/app/web
 volumes:
   fun:
