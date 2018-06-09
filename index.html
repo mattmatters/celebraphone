@@ -10,10 +10,6 @@
         <h1>Talk with a Celebrity</h1>
         <video id="video" autoplay hidden></video>
         <canvas id="output" height="420" width="600"></canvas>
-        <div class="controls">
-            <button>Call</button>
-            <button>Hang Up</button>
-        </div>
         <canvas hidden id="video-out"></canvas>
         <canvas hidden id="face-canvas"></canvas>
     </body>
@@ -52,7 +48,7 @@
          }
 
          Module.addOnPostRun(() => {
-             loadImageFile('static/steve.jpg').then(() => {
+             loadImageFile('static/savage.jpg').then(() => {
                  var imageData = faceCon.getImageData(0, 0, srcWidth, srcHeight);
 
                  // Init vector
@@ -67,6 +63,7 @@
                  wasmLoaded = true;
              });
          });
+
 
          video.addEventListener('canplay', (e) => {
              if (!isStreaming) {

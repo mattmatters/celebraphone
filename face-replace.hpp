@@ -12,7 +12,6 @@ class FaceReplace {
   dlib::shape_predictor landmarker;
   cv::Mat srcImg;
   std::vector<cv::Point2f> srcPoints;
-  std::vector<uint8_t> stuff;
   cv::CascadeClassifier faceDetector;
 private:
   std::vector<cv::Point2f> detectPoints(dlib::cv_image<dlib::bgr_pixel> &img, dlib::rectangle box);
@@ -22,13 +21,7 @@ private:
   void applyAffineTransform(cv::Mat &warpImage, cv::Mat &src, std::vector<cv::Point2f> &srcTri, std::vector<cv::Point2f> &dstTri);
 public:
   void DebugMode(bool debugMode);
-  int getPointCount();
   std::string showImg(std::string img);
-  int getWidth();
-  int getHeight();
-  std::vector<cv::Point2f> getPoints();
-  float getPoint(int point);
-  int getFailingPoint();
   FaceReplace(std::vector<uint8_t> &baseImg, int width, int height);
   void MapToFace(std::vector<uint8_t> &src, int width, int height);
 };

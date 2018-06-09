@@ -201,40 +201,11 @@ std::vector<cv::Rect> FaceReplace::detectFaces(cv::Mat &img) {
   return faces;
 }
 
-// Debug
-int FaceReplace::getFailingPoint() {
-  Subdiv2D subdiv(cv::boundingRect(srcPoints));
-
-  // Insert points into subdiv
-  for (int i = 0; i < srcPoints.size(); i++) {
-    try {
-      subdiv.insert(srcPoints[i]);
-    } catch(std::exception e) {
-      return i;
-    }
-  }
-  return 88;
-}
-
-
-int FaceReplace::getWidth() { return srcImg.cols; }
-int FaceReplace::getHeight() { return srcImg.rows; }
-int FaceReplace::getPointCount() { return srcPoints.size(); }
-std::vector<cv::Point2f> FaceReplace::getPoints() { return srcPoints; }
-float FaceReplace::getPoint(int p) { return srcPoints.at(p).x; }
 
 EMSCRIPTEN_BINDINGS(c) {
   register_vector<uint8_t>("VectorInt");
-  //  function("dofuckingerror", &dofuckingerror);
-  //  function("drawBox", &drawBox);
   class_<FaceReplace>("FaceReplace")
     .constructor<std::vector<uint8_t>&, int, int>()
     .function("MapToFace", &FaceReplace::MapToFace)
-    .function("getPointCount", &FaceReplace::getPointCount)
-    .function("getPoints", &FaceReplace::getPoints)
-    .function("DebugMode", &FaceReplace::DebugMode)
-    .function("getPoint", &FaceReplace::getPoint)
-    .function("getWidth", &FaceReplace::getWidth)
-    .function("getHeight", &FaceReplace::getHeight)
-    .function("getFailingPoint", &FaceReplace::getFailingPoint);
+    .function("DebugMode", &FaceReplace::DebugMode);
 }
