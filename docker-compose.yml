@@ -1,17 +1,19 @@
 version: "3.1"
 services:
   devserver:
+    ports:
+      - "8080:80"
     build:
       context: .
       dockerfile: server
-    ports:
-      - "8081:80"
     volumes:
-      - ./:/usr/share/nginx/html
+      - fun:/usr/share/nginx/html
   wasm:
     build:
       context: .
       dockerfile: Dockerfile
     volumes:
-      - ./:/usr/src/app
-    command: /bin/bash -c "source /usr/emsdk/emsdk_env.sh && emcmake cmake && emmake make"
+      - fun:/usr/src/app/web
+      - ./web:/usr/src/app/web
+volumes:
+  fun:

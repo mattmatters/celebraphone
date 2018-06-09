@@ -57,11 +57,6 @@ RUN apt-get purge -y cmake && \
     make -j4 && \
     make install
 
-
-# RUN mkdir buildthing && \
-#     cd buildthing && \
-#     /bin/bash -c "source /usr/emsdk/emsdk_env.sh && emcmake cmake --no DLIB_USE_CUDA /dlib-19.6/dlib"
-
 WORKDIR /usr/src/app
 
 RUN cd /usr/src/app
@@ -74,6 +69,6 @@ RUN wget https://raw.githubusercontent.com/opencv/opencv/master/data/haarcascade
 COPY . .
 
 # Set up for building
-RUN /bin/bash -c "source /usr/emsdk/emsdk_env.sh && emcmake cmake && emmake make"
+RUN ./build.sh
 
-CMD /bin/bash -c "source /usr/emsdk/emsdk_env.sh && bash"
+CMD ./build.sh
