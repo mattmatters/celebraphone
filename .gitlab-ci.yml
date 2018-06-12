@@ -35,6 +35,7 @@ release_wasm:
     - master
 
 deploy:
+  image: python:latest
   stage: deploy
   variables:
     BUCKET: "s3://opencvwasm/"
