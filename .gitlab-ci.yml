@@ -31,6 +31,9 @@ release_wasm:
   script:
     - docker pull registry.gitlab.com/mattmatters/opencv-wasm/wasm:$CI_PIPELINE_ID
     - docker run -v "$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"/web:/usr/src/app/web registry.gitlab.com/mattmatters/opencv-wasm/wasm:$CI_PIPELINE_ID
+    - ls
+    - echo $( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+    - ls ./web
   only:
     - master
 
