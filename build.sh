@@ -10,8 +10,11 @@ mkdir web
 mkdir web/wasm
 mkdir web/static
 
+
 cp index.html web
 
+# Static stuff
+cp favicon.ico web
 cp static/* web/static
 
 # Now build
