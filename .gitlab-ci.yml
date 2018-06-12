@@ -39,8 +39,9 @@ deploy:
   stage: deploy
   variables:
     BUCKET: "s3://opencvwasm/"
-  script:
+  before_script:
     - pip install awscli
+  script:
     - aws s3 cp ./web $BUCKET --recursive
   only:
     - master
