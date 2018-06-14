@@ -8,6 +8,9 @@
     </head>
     <body>
         <h1>Talk with a Celebrity</h1>
+        <div id="loading">
+            <p>Downloading data now, this is a large download and can take some time</p>
+        </div>
         <video id="video" autoplay hidden></video>
         <canvas id="output" height="420" width="600"></canvas>
         <canvas hidden id="video-out"></canvas>
@@ -49,6 +52,9 @@
 
          Module.addOnPostRun(() => {
              loadImageFile('static/harvey2.jpg').then(() => {
+                 var loader = document.getElementById("myDIV");
+                 loader.style.display = "none";
+
                  var imageData = faceCon.getImageData(0, 0, srcWidth, srcHeight);
 
                  // Init vector
