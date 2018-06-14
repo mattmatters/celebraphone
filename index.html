@@ -52,7 +52,7 @@
 
          Module.addOnPostRun(() => {
              loadImageFile('static/harvey2.jpg').then(() => {
-                 var loader = document.getElementById("myDIV");
+                 var loader = document.getElementById("loading");
                  loader.style.display = "none";
 
                  var imageData = faceCon.getImageData(0, 0, srcWidth, srcHeight);
@@ -65,7 +65,6 @@
 
                  // Create module
                  faceReplacer = new Module.FaceReplace(dat, imageData.width, imageData.height);
-                 console.log("done");
                  wasmLoaded = true;
              });
          });
@@ -113,18 +112,13 @@
          });
 
          function transformFace() {
-             console.time('all');
              var imageData = con.getImageData(0, 0, width, height);
              // Init vector
-             console.time('malloc');
              var y = new Module.VectorInt();
              for (let i = 0; i < imageData.data.length; i++) {
                  y.push_back(imageData.data[i]);
              }
-             console.timeEnd('malloc');
-             console.time('face');
              faceReplacer.MapToFace(y, imageData.width, imageData.height);
-             console.timeEnd('face');
 
              // Overwrite image data
              for (let j = 0; j < y.size(); j++) {
@@ -134,7 +128,6 @@
              Module._free(y);
              conOut.clearRect(0, 0, imageData.width, imageData.height);
              conOut.putImageData(imageData, 0, 0);
-             console.timeEnd('all');
          };
         </script>
     </footer>
