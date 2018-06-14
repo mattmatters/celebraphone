@@ -26,8 +26,11 @@ build_wasm:
     - docker push registry.gitlab.com/mattmatters/opencv-wasm/wasm:$CI_PIPELINE_ID
 
 # Prepare everything for release
-release_wasm:
+release:wasm:
   stage: release
+  artifacts:
+    paths:
+      - web/
   script:
     - docker pull registry.gitlab.com/mattmatters/opencv-wasm/wasm:$CI_PIPELINE_ID
     - mkdir web
@@ -38,11 +41,13 @@ release_wasm:
 deploy:
   image: python:latest
   stage: deploy
+  dependencies:
+    - release:wasm
   variables:
     BUCKET: "s3://opencvwasm/"
   before_script:
     - pip install awscli
   script:
-    - aws s3 cp "$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"/web $BUCKET --recursive
+    - aws s3 cp web $BUCKET --recursive
   only:
     - master
