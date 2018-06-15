@@ -12,13 +12,22 @@
             <p>Downloading data now, this is a large download and can take some time</p>
         </div>
         <video id="video" autoplay hidden></video>
-        <canvas id="output" height="420" width="600"></canvas>
+        <canvas id="output" height="300" width="300"></canvas>
         <canvas hidden id="video-out"></canvas>
         <canvas hidden id="face-canvas"></canvas>
     </body>
     <footer>
         <script type="text/javascript" src="face_replace.js"></script>
         <script type='text/javascript'>
+         const FACES = [
+             'harvey2.jpg',
+             'obama.png',
+             'nixon.jpg',
+             'savage.jpg',
+             'trump.jpg',
+             'dmx.jpg',
+         ];
+
          let video = document.querySelector("#video");
          let videoOut = document.querySelector("#video-out");
          let outCan = document.querySelector("#output");
@@ -29,8 +38,8 @@
          let isStreaming = false;
          let wasmLoaded = false;
          let faceReplacer = false;
-         let width = 600;
-         let height = 420;
+         let width = 300;
+         let height = 300;
          let srcWidth = 0;
          let srcHeight = 0;
 
@@ -51,7 +60,8 @@
          }
 
          Module.addOnPostRun(() => {
-             loadImageFile('static/harvey2.jpg').then(() => {
+             const name = FACES[Math.floor(Math.random()*FACES.length)];
+             loadImageFile(`static/${name}`).then(() => {
                  var loader = document.getElementById("loading");
                  loader.style.display = "none";
 
