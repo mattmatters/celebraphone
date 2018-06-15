@@ -121,7 +121,8 @@
              faceReplacer.MapToFace(y, imageData.width, imageData.height);
 
              // Overwrite image data
-             for (let j = 0; j < y.size(); j++) {
+             const len = y.size();
+             for (let j = 0; j < len; j++) {
                  imageData.data[j] = y.get(j);
              }
 
