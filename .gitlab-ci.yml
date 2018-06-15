@@ -45,9 +45,8 @@ deploy:
     - release:wasm
   variables:
     BUCKET: "s3://opencvwasm/"
-  before_script:
-    - pip install awscli
   script:
-    - aws s3 cp web $BUCKET --recursive
+    - cd web
+    - bash deploy.sh
   only:
     - master
