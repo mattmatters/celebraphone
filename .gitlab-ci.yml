@@ -19,7 +19,7 @@ before_script:
   - docker info
   - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN registry.gitlab.com
 
-build_wasm:
+build:wasm:
   stage: build
   script:
     - docker build -t registry.gitlab.com/mattmatters/opencv-wasm/wasm:$CI_PIPELINE_ID .
@@ -45,6 +45,8 @@ deploy:
     - release:wasm
   variables:
     BUCKET: "s3://opencvwasm/"
+  before_script:
+    - pip install awscli
   script:
     - bash deploy.sh
   only:
