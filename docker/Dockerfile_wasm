@@ -3,8 +3,7 @@ FROM ubuntu:18.04
 # For some reason ubuntu is forcing this to be an interactive thing on update
 # we override that here
 ENV TZ=America/New_York
-RUN ln -sf /usr/share/zoneinfo/America/New_York /etc/localtime \
- && dpkg-reconfigure -f noninteractive tzdata
+RUN ln -sf /usr/share/zoneinfo/America/New_York /etc/localtime
 
 # Update distro and install essentials
 RUN apt-get -y update && apt-get -y install git \
