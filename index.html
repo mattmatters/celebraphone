@@ -6,6 +6,13 @@
         <title>Celetalk</title>
         <link rel="shortcut icon" href="static/favicon.ico" type="image/x-icon" />
         <link rel="stylesheet" type="text/css" href="static/style.css" />
+        <script async src="https://www.googletagmanager.com/gtag/js?id=UA-101436618-2"></script>
+        <script>
+         window.dataLayer = window.dataLayer || [];
+         function gtag(){dataLayer.push(arguments);}
+         gtag('js', new Date());
+         gtag('config', 'UA-101436618-2');
+        </script>
     </head>
     <body>
         <h1>Talk with a Celebrity</h1>
@@ -18,7 +25,7 @@
         <canvas hidden id="face-canvas"></canvas>
     </body>
     <footer>
-        <script type="text/javascript" src="face_replace.js"></script>
+        <script type="text/javascript" src="wasm/face_replace.js"></script>
         <script type='text/javascript'>
          const FACES = [
              'harvey2.jpg',
