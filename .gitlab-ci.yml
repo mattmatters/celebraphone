@@ -22,7 +22,7 @@ before_script:
 build:wasm:
   stage: build
   script:
-    - docker build -t registry.gitlab.com/mattmatters/opencv-wasm/wasm:$CI_PIPELINE_ID .
+    - docker build -t registry.gitlab.com/mattmatters/opencv-wasm/wasm:$CI_PIPELINE_ID -f docker/Dockerfile_wasm .
     - docker push registry.gitlab.com/mattmatters/opencv-wasm/wasm:$CI_PIPELINE_ID
 
 # Prepare everything for release
