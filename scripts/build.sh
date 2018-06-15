@@ -3,22 +3,22 @@
 # Stuff for wasm
 source /usr/emsdk/emsdk_env.sh
 
-rm -rf web
+rm -rf dist
 
 # Build directories
-mkdir web
-mkdir web/wasm
-mkdir web/static
+mkdir dist
+mkdir dist/wasm
+mkdir dist/static
 
 
-cp index.html web
+cp index.html dist
 
 # Static stuff
-cp favicon.ico web
-cp static/* web/static
+cp favicon.ico dist
+cp static/* dist/static
 
 # Now build
 emcmake cmake
 emmake make
 
-cp face_* web
+cp face_* dist/wasm

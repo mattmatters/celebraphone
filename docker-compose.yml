@@ -3,9 +3,9 @@ services:
   wasm:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: docker/Dockerfile_wasm
     volumes:
-      - fun:/usr/src/app/web
+      - fun:/usr/src/app/dist
   devserver:
     depends_on:
       - wasm

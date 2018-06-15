@@ -1,4 +1,4 @@
-FROM ubuntu:17.10
+FROM ubuntu:18.04
 
 # Update distro and install essentials
 RUN apt-get update && apt-get -y install git \
@@ -61,14 +61,17 @@ WORKDIR /usr/src/app
 
 RUN cd /usr/src/app
 
+RUN mkdir dep && cd dep
+
 RUN wget http://dlib.net/files/shape_predictor_68_face_landmarks.dat.bz2 && \
-    bzip2 -d -v shape_predictor_68_face_landmarks.dat.bz2
+    bzip2 -d -v shape_predictor_68_face_landmarks.dat.bz2 && \
+    wget https://raw.githubusercontent.com/opencv/opencv/master/data/haarcascades/haarcascade_frontalface_alt2.xml
 
-RUN wget https://raw.githubusercontent.com/opencv/opencv/master/data/haarcascades/haarcascade_frontalface_alt2.xml
+RUN cd /usr/src/app
 
-COPY . .
+COPY ./cpp .
+COPY ./scripts/build.sh .
 
-# Set up for building
 RUN ./build.sh
 
 CMD ./build.sh

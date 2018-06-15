@@ -44,7 +44,7 @@ deploy:
   dependencies:
     - release:wasm
   variables:
-    BUCKET: "s3://opencvwasm/"
+    BUCKET: "s3://opencvwasm"
   before_script:
     - pip install awscli
   script:
