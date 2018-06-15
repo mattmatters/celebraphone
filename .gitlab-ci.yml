@@ -46,7 +46,6 @@ deploy:
   variables:
     BUCKET: "s3://opencvwasm/"
   script:
-    - cd web
     - bash deploy.sh
   only:
     - master
