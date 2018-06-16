@@ -1,21 +1,15 @@
 #!/bin/bash
 
-# Stuff for wasm
-source /usr/emsdk/emsdk_env.sh
-
-rm -rf dist
+rm -rf dist/wasm
 
 # Build directories
-mkdir dist
-mkdir dist/wasm
-mkdir dist/static
+if [[ ! -d ./dist ]]; then
+    mkdir ./dist
+fi
 
-
-cp index.html dist
-
-# Static stuff
-cp favicon.ico dist
-cp static/* dist/static
+if [[ ! -d ./dist/wasm ]]; then
+    mkdir ./dist/wasm
+fi
 
 # Now build
 emcmake cmake

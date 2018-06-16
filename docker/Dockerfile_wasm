@@ -1,43 +1,20 @@
-FROM ubuntu:18.04
+FROM trzeci/emscripten:latest
 
 # For some reason ubuntu is forcing this to be an interactive thing on update
-# we override that here
-ENV TZ=America/New_York
-RUN ln -sf /usr/share/zoneinfo/America/New_York /etc/localtime
 
 # Update distro and install essentials
-RUN apt-get -y update && apt-get -y install git \
-    build-essential \
-    cmake \
-    clang \
+RUN apt-get -y install bzip2 \
     wget \
     bzip2 \
-    unzip \
-    libx11-dev \
-    libatlas-base-dev \
-    libgtk-3-dev \
-    libboost-python-dev \
-    libopencv-dev \
-    gcc-multilib \
-    g++-multilib
+    unzip
 
 RUN cd /usr
-
-# Install emcc
-RUN cd /usr && \
-    git clone https://github.com/juj/emsdk.git && \
-    cd emsdk && \
-    ./emsdk install latest && \
-    ./emsdk activate latest && \
-    /bin/bash -c "source /usr/emsdk/emsdk_env.sh" && \
-    cd ..
 
 # Get latest opencv
 RUN wget https://github.com/opencv/opencv/archive/3.4.0.zip && \
     unzip 3.4.0.zip && \
     cd opencv-3.4.0 && \
-    /bin/bash -c "source /usr/emsdk/emsdk_env.sh && \
-                  python ./platforms/js/build_js.py build_wasm --build_wasm"
+    python ./platforms/js/build_js.py build_wasm --build_wasm
 
 # Install dlib
 RUN wget http://dlib.net/files/dlib-19.6.tar.bz2 && \
@@ -52,15 +29,15 @@ RUN wget http://dlib.net/files/dlib-19.6.tar.bz2 && \
     cd ..
 
 # Update to latest cmake, current one has a nasty bug that affects the project
-RUN apt-get purge -y cmake && \
-    mkdir temp-c && \
-    cd temp-c && \
-    wget https://cmake.org/files/v3.10/cmake-3.10.0.tar.gz && \
-    tar -xzvf cmake-3.10.0.tar.gz && \
-    cd cmake-3.10.0 && \
-    ./bootstrap && \
-    make -j4 && \
-    make install
+# RUN apt-get purge -y cmake && \
+#     mkdir temp-c && \
+#     cd temp-c && \
+#     wget https://cmake.org/files/v3.10/cmake-3.10.0.tar.gz && \
+#     tar -xzvf cmake-3.10.0.tar.gz && \
+#     cd cmake-3.10.0 && \
+#     ./bootstrap && \
+#     make -j4 && \
+#     make install
 
 WORKDIR /usr/src/app
 

@@ -4,19 +4,18 @@ cmake_minimum_required(VERSION 3.0)
 add_definitions(-DDLIB_NO_GUI_SUPPORT)
 SET(DLIB_USE_CUDA NO)
 SET(OpenCV_STATIC ON)
-SET(OpenCV_DIR /opencv-3.4.0/build_wasm)
-SET(PreloadPth ./dep/shape_predictor_68_face_landmarks.dat)
-SET(PreloadPth2 ./dep/haarcascade_frontalface_alt2.xml)
+SET(OpenCV_DIR /src/opencv-3.4.0/build_wasm)
+SET(PreloadPth ./shape_predictor_68_face_landmarks.dat)
+SET(PreloadPth2 ./haarcascade_frontalface_alt2.xml)
 
 find_package(OpenCV REQUIRED)
 # add_subdirectory(/dlib-19.6/dlib dlib_build)
 
-include_directories(${OpenCV_INCLUDE_DIRS} /dlib-19.6 .)
+include_directories(${OpenCV_INCLUDE_DIRS} /src/dlib-19.6 .)
 
-# add_library(color_cycle_lib color_cycle.cpp color_cycle.h)
 
 if (EMSCRIPTEN)
-  add_executable (face_replace face-replace.cpp /dlib-19.6/dlib/all/source.cpp)
+  add_executable (face_replace face-replace.cpp /src/dlib-19.6/dlib/all/source.cpp)
   target_link_libraries(face_replace ${OpenCV_LIBS})
 
   # All the WASM flags
