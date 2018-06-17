@@ -85,8 +85,10 @@ function startWorker() {
         const faceCanvas = document.getElementById('face-canvas');
         const faceCon = faceCanvas.getContext('2d');
         worker.postMessage({ msg: 'init', image: faceCon.getImageData(0, 0, faceCanvas.width, faceCanvas.height)});
+        document.getElementById('loading').innerHTML = 'Performing setup';
         break;
       case 'init':
+        document.getElementById('loading').display = 'none';
         worker.postMessage({ msg: 'replace', image: srcContext.getImageData(0, 0, srcCanvas.width, srcCanvas.height)});
         break;
       case 'replaced':
