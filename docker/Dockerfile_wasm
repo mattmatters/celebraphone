@@ -49,7 +49,7 @@ RUN wget http://dlib.net/files/shape_predictor_68_face_landmarks.dat.bz2 && \
 
 RUN cd /usr/src/app
 
-COPY ./cpp .
+COPY ./wasm .
 COPY ./scripts/build.sh .
 
 RUN ./build.sh
