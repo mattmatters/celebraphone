@@ -4,7 +4,6 @@
 class faceReplacer {
   constructor(imageData) {
     this.srcImg = this.mallocVect(imageData.data);
-    console.log(this.srcImg);
     this.replacer = new Module.FaceReplace(this.srcImg, imageData.width, imageData.height);
   }
 
