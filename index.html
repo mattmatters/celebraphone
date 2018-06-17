@@ -5,7 +5,8 @@
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
         <title>Celebraphone</title>
         <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon" />
-        <link rel="stylesheet" type="text/css" href="static/style.css" />
+        <link rel="stylesheet" type="text/css" href="/static/style.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
         <script async src="https://www.googletagmanager.com/gtag/js?id=UA-101436618-2"></script>
         <script>
          window.dataLayer = window.dataLayer || [];
@@ -20,6 +21,10 @@
             <p>Downloading data now, this is a large download and can take some time</p>
         </div>
         <video id="video" autoplay hidden></video>
+        <footer>
+          <p>Made by <a href="https://mattmatters.io">Matt Lewis</a></p>
+          <a href="https://github.com/mattmatters/celebraphone"><i class="fa fa-github" aria-hidden="true" /></a>
+        </footer>
         <canvas id="output" height="300" width="200"></canvas>
         <canvas hidden id="video-out"></canvas>
         <canvas hidden id="face-canvas"></canvas>
