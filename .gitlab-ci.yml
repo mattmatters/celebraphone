@@ -62,6 +62,6 @@ deploy:
   before_script:
     - pip install awscli
   script:
-    - bash deploy.sh
+    - bash scripts/deploy.sh
   only:
     - master
