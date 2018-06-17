@@ -88,7 +88,7 @@ function startWorker() {
         document.getElementById('loading').innerHTML = 'Performing setup';
         break;
       case 'init':
-        document.getElementById('loading').display = 'none';
+        document.getElementById('loading').style.display = 'none';
         worker.postMessage({ msg: 'replace', image: srcContext.getImageData(0, 0, srcCanvas.width, srcCanvas.height)});
         break;
       case 'replaced':
