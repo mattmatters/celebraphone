@@ -9,8 +9,6 @@ SET(PreloadPth ./shape_predictor_68_face_landmarks.dat)
 SET(PreloadPth2 ./haarcascade_frontalface_alt2.xml)
 
 find_package(OpenCV REQUIRED)
-# add_subdirectory(/dlib-19.6/dlib dlib_build)
-
 include_directories(${OpenCV_INCLUDE_DIRS} /src/dlib-19.6 .)
 
 
@@ -20,7 +18,12 @@ if (EMSCRIPTEN)
 
   # All the WASM flags
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 --llvm-lto 1 --bind -s ASSERTIONS=2 --memory-init-file 0 ") # -Oz --profiling
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -s DISABLE_EXCEPTION_CATCHING=0")
+  if (DEBUG_BUILD)
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -g4 -s DEMANGLE_SUPPORT=1")
+  else()
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Oz")
+  endif()
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s DISABLE_EXCEPTION_CATCHING=0")
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s WASM=1 --bind -s FORCE_FILESYSTEM=1")
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --preload-file ${PreloadPth} -s TOTAL_MEMORY=640000kb")
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s \"EXTRA_EXPORTED_RUNTIME_METHODS=['addOnPostRun']\" --preload-file ${PreloadPth2}")

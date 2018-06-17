@@ -3,8 +3,8 @@
     <head>
         <meta charset="utf-8">
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-        <title>Celetalk</title>
-        <link rel="shortcut icon" href="static/favicon.ico" type="image/x-icon" />
+        <title>Celebraphone</title>
+        <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon" />
         <link rel="stylesheet" type="text/css" href="static/style.css" />
         <script async src="https://www.googletagmanager.com/gtag/js?id=UA-101436618-2"></script>
         <script>
@@ -21,133 +21,10 @@
         </div>
         <video id="video" autoplay hidden></video>
         <canvas id="output" height="300" width="300"></canvas>
-        <canvas hidden id="video-out"></canvas>
-        <canvas hidden id="face-canvas"></canvas>
+        <canvas id="video-out"></canvas>
+        <canvas id="face-canvas"></canvas>
     </body>
     <footer>
-        <script type="text/javascript" src="wasm/face_replace.js"></script>
-        <script type='text/javascript'>
-         const FACES = [
-             'harvey2.jpg',
-             'obama.png',
-             'nixon.jpg',
-             'savage.jpg',
-             'trump.jpg',
-             'dmx.jpg',
-         ];
-
-         let video = document.querySelector("#video");
-         let videoOut = document.querySelector("#video-out");
-         let outCan = document.querySelector("#output");
-         let faceCanvas = document.querySelector("#face-canvas");
-         let con = videoOut.getContext('2d');
-         let conOut = outCan.getContext('2d');
-         let faceCon = faceCanvas.getContext('2d');
-         let isStreaming = false;
-         let wasmLoaded = false;
-         let faceReplacer = false;
-         let width = 300;
-         let height = 300;
-         let srcWidth = 0;
-         let srcHeight = 0;
-
-         function loadImageFile(url) {
-             var image = new Image();
-             image.src = url;
-             return new Promise((accept, reject) => {
-                 image.onload = accept;
-                 image.onerror = reject;
-             }).then(accept => {
-                 srcWidth = image.width;
-                 srcHeight = image.height;
-                 faceCanvas.width = image.width;
-                 faceCanvas.height = image.height;
-                 faceCon.clearRect(0, 0, image.width, image.height);
-                 faceCon.drawImage(image, 0, 0);
-             });
-         }
-
-         Module.addOnPostRun(() => {
-             const name = FACES[Math.floor(Math.random()*FACES.length)];
-             loadImageFile(`static/${name}`).then(() => {
-                 var loader = document.getElementById("loading");
-                 loader.style.display = "none";
-
-                 var imageData = faceCon.getImageData(0, 0, srcWidth, srcHeight);
-
-                 // Init vector
-                 let dat = new Module.VectorInt();
-                 for (let i = 0; i < imageData.data.length; i++) {
-                     dat.push_back(imageData.data[i]);
-                 }
-
-                 // Create module
-                 faceReplacer = new Module.FaceReplace(dat, imageData.width, imageData.height);
-                 wasmLoaded = true;
-             });
-         });
-
-
-         video.addEventListener('canplay', (e) => {
-             if (!isStreaming) {
-                 // videoWidth isn't always set correctly in all browsers
-                 if (video.videoWidth > 0) {
-                     height = video.videoHeight / (video.videoWidth / width);
-                 }
-
-                 videoOut.setAttribute('width', width);
-                 videoOut.setAttribute('height', height);
-
-                 // Reverse the canvas image
-                 con.translate(width, 0);
-                 con.scale(-1, 1);
-                 isStreaming = true;
-             }
-         }, false);
-
-
-         video.addEventListener('play', () => {
-             // Every 33 milliseconds copy the video image to the canvas
-             setInterval(()  => {
-                 if (video.paused || video.ended) {
-                     return;
-                 }
-
-                 con.fillRect(0, 0, width, height);
-                 con.drawImage(video, 0, 0, width, height);
-                 if (wasmLoaded) {
-                     transformFace();
-                 }
-             }, 200);
-         }, false);
-
-         navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
-             const url = window.URL || window.webkitURL;
-             video.src = url ? url.createObjectURL(stream) : stream;
-             video.play();
-         }).catch((error) => {
-             console.log(error);
-         });
-
-         function transformFace() {
-             var imageData = con.getImageData(0, 0, width, height);
-             // Init vector
-             var y = new Module.VectorInt();
-             for (let i = 0; i < imageData.data.length; i++) {
-                 y.push_back(imageData.data[i]);
-             }
-             faceReplacer.MapToFace(y, imageData.width, imageData.height);
-
-             // Overwrite image data
-             const len = y.size();
-             for (let j = 0; j < len; j++) {
-                 imageData.data[j] = y.get(j);
-             }
-
-             Module._free(y);
-             conOut.clearRect(0, 0, imageData.width, imageData.height);
-             conOut.putImageData(imageData, 0, 0);
-         };
-        </script>
+        <script type="text/javascript" src="/js/lifecycle.js"></script>
     </footer>
 </html>
