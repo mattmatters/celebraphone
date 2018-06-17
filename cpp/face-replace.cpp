@@ -130,7 +130,7 @@ void warpTriangle(Mat &img1, Mat &img2, std::vector<Point2f> t1, std::vector<Poi
 FaceReplace::FaceReplace(std::vector<uint8_t> &baseImg, int width, int height) {
   // Init detector
   dlib::deserialize("shape_predictor_68_face_landmarks.dat") >> landmarker;
-  faceDetector.load( "haarcascade_frontalface_alt2.xml");
+   faceDetector.load("haarcascade_frontalface_alt2.xml");
 
   srcImg = cv::Mat(height, width, CV_8UC(4), baseImg.data());
   debug = false;
