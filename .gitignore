@@ -9,3 +9,4 @@ face_replace.js
 face_replace.wasm
 .DS_Store
 CopyOfCMakeCache.txt
+dist
