@@ -39,6 +39,9 @@ release:wasm:
     - master
 
 release:js:
+  image: python:latest
+  before_script:
+    - echo "overwrite before_script"
   stage: release
   artifacts:
     paths:
