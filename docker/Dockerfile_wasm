@@ -1,17 +1,14 @@
 FROM trzeci/emscripten:latest
 
-# For some reason ubuntu is forcing this to be an interactive thing on update
-
 # Update distro and install essentials
 RUN apt-get -y install bzip2 \
     wget \
     bzip2 \
     unzip
 
-RUN cd /usr
-
 # Get latest opencv
-RUN wget https://github.com/opencv/opencv/archive/3.4.0.zip && \
+RUN cd /usr && \
+    wget https://github.com/opencv/opencv/archive/3.4.0.zip && \
     unzip 3.4.0.zip && \
     cd opencv-3.4.0 && \
     python ./platforms/js/build_js.py build_wasm --build_wasm
@@ -27,17 +24,6 @@ RUN wget http://dlib.net/files/dlib-19.6.tar.bz2 && \
     make install && \
     ldconfig && \
     cd ..
-
-# Update to latest cmake, current one has a nasty bug that affects the project
-# RUN apt-get purge -y cmake && \
-#     mkdir temp-c && \
-#     cd temp-c && \
-#     wget https://cmake.org/files/v3.10/cmake-3.10.0.tar.gz && \
-#     tar -xzvf cmake-3.10.0.tar.gz && \
-#     cd cmake-3.10.0 && \
-#     ./bootstrap && \
-#     make -j4 && \
-#     make install
 
 WORKDIR /usr/src/app
 
