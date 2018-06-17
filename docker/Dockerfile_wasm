@@ -6,9 +6,10 @@ RUN apt-get -y install bzip2 \
     bzip2 \
     unzip
 
+RUN cd /usr
+
 # Get latest opencv
-RUN cd /usr && \
-    wget https://github.com/opencv/opencv/archive/3.4.0.zip && \
+RUN wget https://github.com/opencv/opencv/archive/3.4.0.zip && \
     unzip 3.4.0.zip && \
     cd opencv-3.4.0 && \
     python ./platforms/js/build_js.py build_wasm --build_wasm
