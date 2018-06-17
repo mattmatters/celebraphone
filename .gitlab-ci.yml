@@ -30,11 +30,21 @@ release:wasm:
   stage: release
   artifacts:
     paths:
-      - web/
+      - dist/
   script:
     - docker pull registry.gitlab.com/mattmatters/opencv-wasm/wasm:$CI_PIPELINE_ID
-    - mkdir web
-    - docker run -v "$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"/web:/usr/src/app/web registry.gitlab.com/mattmatters/opencv-wasm/wasm:$CI_PIPELINE_ID
+    - mkdir dist
+    - docker run -v "$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"/dist:/usr/src/app/dist registry.gitlab.com/mattmatters/opencv-wasm/wasm:$CI_PIPELINE_ID
+  only:
+    - master
+
+release:js:
+  stage: release
+  artifacts:
+    paths:
+      - dist/
+  script:
+    - bash ./scripts/build_static.sh
   only:
     - master
 
@@ -43,6 +53,7 @@ deploy:
   stage: deploy
   dependencies:
     - release:wasm
+    - release:js
   variables:
     BUCKET: "s3://opencvwasm"
   before_script:
