@@ -5,14 +5,12 @@ const FACES = [
   'efron.jpg',
   'foxx.jpg',
   'harvey.jpg',
-  'homer.jpg',
   'murphy.png',
   'nixon.jpg',
   'obama.png',
   'savage.jpg',
   'snoopp.jpg',
   'spacey.jpg',
-  'trump.jpg',
   'welles.jpg',
 ];
 
