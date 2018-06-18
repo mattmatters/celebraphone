@@ -27,3 +27,11 @@ This is extremely rough still with a laundry list of things still to do
 * the static and web page stuff needs to get its own home.
 
 That being said, I am extremely proud of what is currently there.
+
+## Testing
+
+Testing is a bit of a pain, because it mainly needs to be tested in a variety of browser environments.
+
+I am using Browser Stack for most of the testing portions.
+
+[![BrowserStack](/static/Browserstack-logo.svg)](https://www.browserstack.com)
