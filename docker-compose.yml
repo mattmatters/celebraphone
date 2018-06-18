@@ -5,7 +5,7 @@ services:
       context: .
       dockerfile: docker/Dockerfile_wasm
     volumes:
-      - fun:/usr/src/app/dist
+      - ./dist:/usr/src/app/dist
   devserver:
     depends_on:
       - wasm
@@ -13,8 +13,8 @@ services:
       - "8080:80"
     build:
       context: .
-      dockerfile: server
+      dockerfile: docker/Dockerfile_devserver
     volumes:
-      - fun:/usr/share/nginx/html
+      - ./dist:/usr/share/nginx/html
 volumes:
   fun:
