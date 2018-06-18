@@ -107,4 +107,6 @@ navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
   startWorker();
 }).catch((error) => {
   console.log(error);
+  let helpTxt = document.getElementById('loading');
+  helpTxt.innerHTML = 'Unfortunately it looks like you do not have a camera hooked up. Sadly this means you can\'t experience all this cool stuff. You should plug one in!';
 });
