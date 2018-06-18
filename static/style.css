@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css?family=Fredoka+One');
+@import url('https://fonts.googleapis.com/css?family=Fredoka+One|Open+Sans');
 
 html {
     background-color: #7C809B;
@@ -8,11 +8,18 @@ body {
     text-align: center;
 }
 
+h1, h2, h3 {
+    font-family: 'Fredoka One', cursive;
+    color: #612940;
+}
+
+p, li {
+    font-family: 'Open Sans', sans-serif;
+}
+
 h1 {
     font-size: 2.5em;
     padding: .5em;
-    color: #612940;
-    font-family: 'Fredoka One', cursive;
 }
 
 #output {
