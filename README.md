@@ -34,4 +34,4 @@ That being said, I am extremely proud of what is currently there.
 
 This project was made possible by some of the people below.
 
-[![BrowserStack](/static/Browserstack-logo.svg)](https://www.browserstack.com)
+[![BrowserStack](static/Browserstack-logo.svg)](https://www.browserstack.com)
