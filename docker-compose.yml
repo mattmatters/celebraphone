@@ -10,11 +10,20 @@ services:
     depends_on:
       - wasm
     ports:
-      - "8080:80"
+      - "80:80"
     build:
       context: .
       dockerfile: docker/Dockerfile_devserver
     volumes:
       - ./dist:/usr/share/nginx/html
+  e2e:
+    depends_on:
+      - devserver
+    build:
+      context: .
+      dockerfile: docker/Dockerfile_e2e
+    environment:
+      - BROWSERSTACK_USER=$BROWSERSTACK_USER
+      - BROWSERSTACK_ACCESS_KEY=$BROWSERSTACK_ACCESS_KEY
 volumes:
   fun:
