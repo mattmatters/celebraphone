@@ -10,3 +10,4 @@ face_replace.wasm
 .DS_Store
 CopyOfCMakeCache.txt
 dist
+.env
