@@ -12,6 +12,7 @@ variables:
 stages:
   - build
   - release
+  - test
   - deploy
 
 before_script:
@@ -25,6 +26,24 @@ build:wasm:
     - docker build -t registry.gitlab.com/mattmatters/opencv-wasm/wasm:$CI_PIPELINE_ID -f docker/Dockerfile_wasm .
     - docker push registry.gitlab.com/mattmatters/opencv-wasm/wasm:$CI_PIPELINE_ID
 
+build:wasm:
+  stage: build
+  script:
+    - docker build -t registry.gitlab.com/mattmatters/opencv-wasm/wasm:$CI_PIPELINE_ID -f docker/Dockerfile_wasm .
+    - docker push registry.gitlab.com/mattmatters/opencv-wasm/wasm:$CI_PIPELINE_ID
+
+build:devserver:
+  stage: build
+  script:
+    - docker build -t registry.gitlab.com/mattmatters/opencv-wasm/devserver:$CI_PIPELINE_ID -f docker/Dockerfile_devserver .
+    - docker push registry.gitlab.com/mattmatters/opencv-wasm/devserver:$CI_PIPELINE_ID
+
+build:e2e:
+  stage: build
+  script:
+    - docker build -t registry.gitlab.com/mattmatters/opencv-wasm/e2e:$CI_PIPELINE_ID -f docker/Dockerfile_e2e .
+    - docker push registry.gitlab.com/mattmatters/opencv-wasm/e2e:$CI_PIPELINE_ID
+
 # Prepare everything for release
 release:wasm:
   stage: release
@@ -35,8 +54,6 @@ release:wasm:
     - docker pull registry.gitlab.com/mattmatters/opencv-wasm/wasm:$CI_PIPELINE_ID
     - mkdir dist
     - docker run -v "$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"/dist:/usr/src/app/dist registry.gitlab.com/mattmatters/opencv-wasm/wasm:$CI_PIPELINE_ID
-  only:
-    - master
 
 release:js:
   image: python:latest
@@ -48,8 +65,18 @@ release:js:
       - dist/
   script:
     - bash ./scripts/build_static.sh
-  only:
-    - master
+
+test:e2e:
+  stage: test
+  dependencies:
+    - release:wasm
+    - release:js
+  script:
+    - docker pull registry.gitlab.com/mattmatters/opencv-wasm/devserver:$CI_PIPELINE_ID
+    - docker pull registry.gitlab.com/mattmatters/opencv-wasm/e2e:$CI_PIPELINE_ID
+    - docker run -v $(pwd)/dist:/usr/share/nginx/html -p 80:80 -d registry.gitlab.com/mattmatters/opencv-wasm/devserver:$CI_PIPELINE_ID
+    - docker run --env BROWSERSTACK_ACCESS_KEY=$BROWSERSTACK_ACCESS_KEY --env BROWSERSTACK_USER=$BROWSERSTACK_USER registry.gitlab.com/mattmatters/opencv-wasm/e2e:$CI_PIPELINE_ID
+    - docker stop registry.gitlab.com/mattmatters/opencv-wasm/devserver:$CI_PIPELINE_ID
 
 deploy:
   image: python:latest
