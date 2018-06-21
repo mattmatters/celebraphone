@@ -11,3 +11,4 @@ face_replace.wasm
 CopyOfCMakeCache.txt
 dist
 .env
+node_modules
