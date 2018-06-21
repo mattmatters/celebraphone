@@ -1,0 +1,24 @@
+{
+  "name": "celebraphone",
+  "version": "1.0.0",
+  "description": "The magical face to face replacement app",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "e2e": "./tests/local.runner.js -c tests/nightwatch.local.conf.js -e chrome_desktop_67,chrome_android_latest,firefox_desktop_58,safari"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@gitlab.com/mattmatters/opencv-wasm.git"
+  },
+  "author": "Matt Lewis",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://gitlab.com/mattmatters/opencv-wasm/issues"
+  },
+  "homepage": "https://gitlab.com/mattmatters/opencv-wasm#README",
+  "devDependencies": {
+    "browserstack-local": "^1.3.3",
+    "nightwatch": "^0.9.21"
+  }
+}
