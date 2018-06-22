@@ -33,5 +33,7 @@ That being said, I am extremely proud of what is currently there.
 ## Thank You Everyone!
 
 This project was made possible by some of the people below.
+
 [![Gitlab](static/gitlab.svg | width=150)](https://www.gitlab.com)
+
 [![BrowserStack](static/Browserstack-logo.svg | width=150)](https://www.browserstack.com)
