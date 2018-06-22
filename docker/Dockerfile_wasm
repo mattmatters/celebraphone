@@ -1,4 +1,4 @@
-FROM superpolkadance/emscripten-opencv-dlib:1.0
+FROM superpolkadance/emscripten-opencv-dlib:1.0.0
 
 COPY ./wasm .
 COPY ./scripts/build.sh .
