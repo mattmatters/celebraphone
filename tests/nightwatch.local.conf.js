@@ -9,7 +9,7 @@ const nightwatch_config = {
 
   test_settings: {
     default: {
-      launch_url: 'http://localhost',
+      launch_url: 'http://localhost:8081',
       desiredCapabilities: {
         browser: 'chrome',
         project: 'celebraphone',

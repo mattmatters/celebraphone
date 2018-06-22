@@ -10,7 +10,7 @@ services:
     depends_on:
       - wasm
     ports:
-      - "80:80"
+      - "8081:80"
     build:
       context: .
       dockerfile: docker/Dockerfile_devserver
