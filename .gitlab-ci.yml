@@ -76,6 +76,7 @@ test:e2e:
     - docker pull registry.gitlab.com/mattmatters/opencv-wasm/e2e:$CI_PIPELINE_ID
     - docker run -v $(pwd)/dist:/usr/share/nginx/html -p 8081:80 -d registry.gitlab.com/mattmatters/opencv-wasm/devserver:$CI_PIPELINE_ID
     - sleep 5
+    - wget http://localhost:8081
     - docker run --env BROWSERSTACK_ACCESS_KEY=$BROWSERSTACK_ACCESS_KEY --env BROWSERSTACK_USER=$BROWSERSTACK_USER registry.gitlab.com/mattmatters/opencv-wasm/e2e:$CI_PIPELINE_ID
     - docker stop registry.gitlab.com/mattmatters/opencv-wasm/devserver:$CI_PIPELINE_ID
 
