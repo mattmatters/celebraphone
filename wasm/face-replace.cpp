@@ -1,54 +1,11 @@
-#include <dlib/clustering.h>
-#include <dlib/dnn.h>
-#include <dlib/image_io.h>
-#include <dlib/image_processing/frontal_face_detector.h>
-#include <dlib/opencv.h>
-#include <dlib/pixel.h>
-#include <dlib/string.h>
 #include <emscripten/bind.h>
+#include <face-detect.hpp>
 #include <face-replace.hpp>
 #include <iostream>
 #include <opencv2/opencv.hpp>
 
 using namespace cv;         // OpenCV
 using namespace emscripten; // WASM
-
-/**
- * This class is made to process uint8 clamped arrays being passed from the browser.
- *
- * A uint8 clamped array generated from a canvas images is a two dimensional array
- * made up of by y height and x width.
- *
- * Each pixel comes in rgba ([red, green, blue, alpha]) format. Opencv's equivalent is
- * CV_8UC4 and dlib's is rgb_alpha_pixel.
- */
-
-int main(int argc, char **argv) {
-  std::cout << "Hello, World!" << std::endl;
-  return 0;
-}
-
-// Helper function, eases conversion between two formats
-static dlib::rectangle openCVRectToDlib(cv::Rect r)
-{
-  return dlib::rectangle((long)r.tl().x, (long)r.tl().y, (long)r.br().x - 1, (long)r.br().y - 1);
-}
-
-static void drawPoints(cv::Mat &img, std::vector<cv::Point2f> points) {
-  for (int j = 0; j < points.size(); j++) {
-    cv::circle(img, points[j], 4, Scalar( 89, 200, 27));
-  }
-}
-
-static void drawTriangle(cv::Mat &img, std::vector<cv::Point2f> points) {
-  if (points.size() < 3) {
-    return;
-  }
-
-  cv::line(img, points[0], points[1], Scalar( 89, 200, 27));
-  cv::line(img, points[1], points[2], Scalar( 89, 200, 27));
-  cv::line(img, points[2], points[0], Scalar( 89, 200, 27));
-}
 
 // Apply affine transform calculated using srcTri and dstTri to src
 static void applyAffineTransform(Mat &warpImage, Mat &src, std::vector<Point2f> &srcTri, std::vector<Point2f> &dstTri)
@@ -96,7 +53,8 @@ static void calcDelaunayTriangles(std::vector<Point2f> points, std::vector<std::
 }
 
 // Warps and alpha blends triangular regions from img1 and img2 to img
-void warpTriangle(Mat &img1, Mat &img2, std::vector<Point2f> t1, std::vector<Point2f> t2) {
+void warpTriangle(Mat &img1, Mat &img2, std::vector<Point2f> t1, std::vector<Point2f> t2)
+{
   cv::Rect r1 = boundingRect(t1);
   cv::Rect r2 = boundingRect(t2);
 
@@ -127,27 +85,33 @@ void warpTriangle(Mat &img1, Mat &img2, std::vector<Point2f> t1, std::vector<Poi
   img2(r2) = img2(r2) + img2Rect;
 }
 
-FaceReplace::FaceReplace(std::vector<uint8_t> &baseImg, int width, int height) {
-  // Init detector
-  dlib::deserialize("shape_predictor_68_face_landmarks.dat") >> landmarker;
-   faceDetector.load("haarcascade_frontalface_alt2.xml");
-
+/**
+ * This class is made to process uint8 clamped arrays being passed from the browser.
+ *
+ * A uint8 clamped array generated from a canvas images is a two dimensional array
+ * made up of by y height and x width.
+ *
+ * Each pixel comes in rgba ([red, green, blue, alpha]) format. Opencv's equivalent is
+ * CV_8UC4 and dlib's is rgb_alpha_pixel.
+ */
+FaceReplace::FaceReplace(FaceDetect faceDetector, std::vector<uint8_t> &baseImg, int width, int height)
+{
   srcImg = cv::Mat(height, width, CV_8UC(4), baseImg.data());
-
-  std::vector<cv::Rect> faces = DetectFaces(srcImg);
-  srcPoints = DetectLandmarks(srcImg, faces[0]);
+  std::vector<cv::Rect> faces = faceDetector.DetectFaces(srcImg);
+  srcPoints = faceDetector.DetectLandmarks(srcImg, faces[0]);
 }
 
-void FaceReplace::MapToFace(std::vector<uint8_t> &src, int width, int height) {
+void FaceReplace::MapToFace(std::vector<uint8_t> &src, int width, int height)
+{
   cv::Mat img(height, width, CV_8UC(4), src.data());
-  std::vector<cv::Rect> faces = DetectFaces(img);
+  std::vector<cv::Rect> faces = faceDetector.DetectFaces(img);
   std::vector<std::vector<int>> delaunayTri;
 
   if (faces.size() == 0) {
     return;
   }
 
-  std::vector<cv::Point2f> landmarks = DetectLandmarks(img, faces[0]);
+  std::vector<cv::Point2f> landmarks = faceDetector.DetectLandmarks(img, faces[0]);
   calcDelaunayTriangles(landmarks, delaunayTri);
 
   // Apply affine transformation to Delaunay triangles
@@ -162,31 +126,6 @@ void FaceReplace::MapToFace(std::vector<uint8_t> &src, int width, int height) {
 
     warpTriangle(srcImg, img, t1, t2);
   }
-}
-
-std::vector<cv::Point2f> FaceReplace::DetectLandmarks(cv::Mat &img, cv::Rect face) {
-  std::vector<cv::Point2f> points;
-  dlib::rectangle rec = openCVRectToDlib(face);
-
-  // Create the dlib equivalent
-  dlib::array2d<dlib::rgb_alpha_pixel> thing;
-  dlib::assign_image(thing, dlib::cv_image<dlib::rgb_alpha_pixel>(img));
-
-  dlib::full_object_detection shape = landmarker(thing, rec);
-
-  for (int k=0; k<shape.num_parts(); k++) {
-    cv::Point2f landmark(shape.part(k).x(), shape.part(k).y());
-    points.push_back(landmark);
-  }
-
-  return points;
-}
-
-// std::vector<cv::Rect>
-std::vector<cv::Rect> FaceReplace::DetectFaces(cv::Mat &img) {
-  std::vector<cv::Rect> faces;
-  faceDetector.detectMultiScale(img, faces, 1.1, 2, 0|CV_HAAR_SCALE_IMAGE, cv::Size(30, 30));
-  return faces;
 }
 
 // make a cv mat function
@@ -207,9 +146,13 @@ EMSCRIPTEN_BINDINGS(c) {
 
   function("initMat", &initMat);
 
+  class_<FaceDetect>("FaceDetect")
+    .constructor()
+    .constructor<bool>()
+    .function("DetectFaces", &FaceDetect::DetectFaces)
+    .function("DetectLandmarks", &FaceDetect::DetectLandmarks);
+
   class_<FaceReplace>("FaceReplace")
-    .constructor<std::vector<uint8_t>&, int, int>()
-    .function("MapToFace", &FaceReplace::MapToFace)
-    .function("DetectFaces", &FaceReplace::DetectFaces)
-    .function("DetectLandmarks", &FaceReplace::DetectLandmarks);
+    .constructor<FaceDetect&, std::vector<uint8_t>&, int, int>()
+    .function("MapToFace", &FaceReplace::MapToFace);
 }

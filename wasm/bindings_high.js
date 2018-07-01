@@ -4,7 +4,13 @@
 class faceReplacer {
   constructor(imageData) {
     this.srcImg = this.mallocVect(imageData.data);
-    this.replacer = new Module.FaceReplace(this.srcImg, imageData.width, imageData.height);
+    this.detector = new Module.FaceDetect(true);
+    this.replacer = new Module.FaceReplace(this.detector, this.srcImg, imageData.width, imageData.height);
+    this.mat = Module.initMat(this.srcImg, imageData.width, imageData.height);
+//    this.faces = this.replacer.DetectFaces(this.mat);
+//    console.log(this.faces.get(0));
+//    console.log(this.faces.size());
+//    console.log(this.replacer.DetectLandmarks(this.mat, this.faces.get(0)));
   }
 
   /**

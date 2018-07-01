@@ -76,7 +76,7 @@ function startWorker() {
   const targetContext = targetCanvas.getContext('2d');
   const name = FACES[Math.floor(Math.random()*FACES.length)];
   loadImageFile(`/static/faces/${name}`).then(() => {
-    const worker = new Worker('/wasm/replacer.bundle.js');
+    const worker = new Worker('/wasm/replacer.high.js');
     worker.onmessage = function(e) {
       switch (e.data.msg) {
       case 'bootedUp':
