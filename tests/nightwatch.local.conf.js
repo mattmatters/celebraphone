@@ -9,7 +9,7 @@ const nightwatch_config = {
 
   test_settings: {
     default: {
-      launch_url: 'http://localhost:8081',
+      launch_url: 'http://localhost:80',
       desiredCapabilities: {
         browser: 'chrome',
         project: 'celebraphone',
@@ -72,6 +72,9 @@ const nightwatch_config = {
 // Code to copy seleniumhost/port into test settings
 for(var i in nightwatch_config.test_settings){
   var config = nightwatch_config.test_settings[i];
+  config['browserstack.user'] = process.env.BROWSERSTACK_USER;
+  config['browserstack.key'] = process.env.BROWSERSTACK_ACCESS_KEY;
+  config['browserstack.local'] = true;
   config['selenium_host'] = nightwatch_config.selenium.host;
   config['selenium_port'] = nightwatch_config.selenium.port;
 }

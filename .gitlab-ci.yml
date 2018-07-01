@@ -75,9 +75,10 @@ test:e2e:
   script:
     - docker pull $GL_CONTAINER/devserver:$CI_PIPELINE_ID
     - docker pull $GL_CONTAINER/e2e:$CI_PIPELINE_ID
-    - docker run -v $(pwd)/dist:/usr/share/nginx/html -p 8081:80 -d $GL_CONTAINER/devserver:$CI_PIPELINE_ID
+    - docker network create test
+    - docker run -v $(pwd)/dist:/usr/share/nginx/html --network test -d $GL_CONTAINER/devserver:$CI_PIPELINE_ID
     - sleep 5
-    - docker run --env BROWSERSTACK_ACCESS_KEY=$BROWSERSTACK_ACCESS_KEY --env BROWSERSTACK_USER=$BROWSERSTACK_USER $GL_CONTAINER/e2e:$CI_PIPELINE_ID
+    - docker run -e BROWSERSTACK_ACCESS_KEY -e BROWSERSTACK_USER --network test $GL_CONTAINER/e2e:$CI_PIPELINE_ID
     - docker stop $GL_CONTAINER/devserver:$CI_PIPELINE_ID
 
 deploy:
