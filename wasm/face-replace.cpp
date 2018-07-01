@@ -34,13 +34,13 @@ static dlib::rectangle openCVRectToDlib(cv::Rect r)
   return dlib::rectangle((long)r.tl().x, (long)r.tl().y, (long)r.br().x - 1, (long)r.br().y - 1);
 }
 
-void drawPoints(cv::Mat &img, std::vector<cv::Point2f> points) {
+static void drawPoints(cv::Mat &img, std::vector<cv::Point2f> points) {
   for (int j = 0; j < points.size(); j++) {
     cv::circle(img, points[j], 4, Scalar( 89, 200, 27));
   }
 }
 
-void drawTriangle(cv::Mat &img, std::vector<cv::Point2f> points) {
+static void drawTriangle(cv::Mat &img, std::vector<cv::Point2f> points) {
   if (points.size() < 3) {
     return;
   }
@@ -118,7 +118,7 @@ void warpTriangle(Mat &img1, Mat &img2, std::vector<Point2f> t1, std::vector<Poi
   Mat img1Rect;
   img1(r1).copyTo(img1Rect);
 
-  Mat img2Rect = Mat::zeros(r2.height, r2.width, CV_8UC4);//img1Rect.type());
+  Mat img2Rect = Mat::zeros(r2.height, r2.width, CV_8UC4); // img1Rect.type());
 
   applyAffineTransform(img2Rect, img1Rect, t1Rect, t2Rect);
 
@@ -133,27 +133,22 @@ FaceReplace::FaceReplace(std::vector<uint8_t> &baseImg, int width, int height) {
    faceDetector.load("haarcascade_frontalface_alt2.xml");
 
   srcImg = cv::Mat(height, width, CV_8UC(4), baseImg.data());
-  debug = false;
 
-  std::vector<cv::Rect> faces = detectFaces(srcImg);
-  srcPoints = detectLandmarks(srcImg, faces[0]);
+  std::vector<cv::Rect> faces = DetectFaces(srcImg);
+  srcPoints = DetectLandmarks(srcImg, faces[0]);
 }
 
 void FaceReplace::MapToFace(std::vector<uint8_t> &src, int width, int height) {
   cv::Mat img(height, width, CV_8UC(4), src.data());
-  std::vector<cv::Rect> faces = detectFaces(img);
+  std::vector<cv::Rect> faces = DetectFaces(img);
   std::vector<std::vector<int>> delaunayTri;
 
   if (faces.size() == 0) {
     return;
   }
 
-  std::vector<cv::Point2f> landmarks = detectLandmarks(img, faces[0]);
+  std::vector<cv::Point2f> landmarks = DetectLandmarks(img, faces[0]);
   calcDelaunayTriangles(landmarks, delaunayTri);
-
-  if (debug == true) {
-    drawPoints(img, landmarks);
-  }
 
   // Apply affine transformation to Delaunay triangles
   for (int j = 0; j < delaunayTri.size(); j++) {
@@ -165,19 +160,11 @@ void FaceReplace::MapToFace(std::vector<uint8_t> &src, int width, int height) {
       t2.push_back(landmarks[delaunayTri[j][k]]);
     }
 
-    if (debug == true) {
-      drawTriangle(img, t2);
-    }
-
     warpTriangle(srcImg, img, t1, t2);
   }
 }
 
-void FaceReplace::DebugMode(bool debugMode) {
-  debug = debugMode;
-}
-
-std::vector<cv::Point2f> FaceReplace::detectLandmarks(cv::Mat &img, cv::Rect face) {
+std::vector<cv::Point2f> FaceReplace::DetectLandmarks(cv::Mat &img, cv::Rect face) {
   std::vector<cv::Point2f> points;
   dlib::rectangle rec = openCVRectToDlib(face);
 
@@ -195,17 +182,34 @@ std::vector<cv::Point2f> FaceReplace::detectLandmarks(cv::Mat &img, cv::Rect fac
   return points;
 }
 
-std::vector<cv::Rect> FaceReplace::detectFaces(cv::Mat &img) {
+// std::vector<cv::Rect>
+std::vector<cv::Rect> FaceReplace::DetectFaces(cv::Mat &img) {
   std::vector<cv::Rect> faces;
   faceDetector.detectMultiScale(img, faces, 1.1, 2, 0|CV_HAAR_SCALE_IMAGE, cv::Size(30, 30));
   return faces;
 }
 
+// make a cv mat function
+// having that will create a decent common language to share amongst functions
+cv::Mat initMat(std::vector<uint8_t> &src, int width, int height)
+{
+  return cv::Mat(height, width, CV_8UC(4), src.data());
+}
 
 EMSCRIPTEN_BINDINGS(c) {
+  class_<cv::Rect>("cvRect");
+  class_<cv::Point>("cvPoint");
+  class_<cv::Point2f>("cvPointf");
+  class_<cv::Mat>("Mat");
+
+  register_vector<cv::Rect>("vectRect");
   register_vector<uint8_t>("VectorInt");
+
+  function("initMat", &initMat);
+
   class_<FaceReplace>("FaceReplace")
     .constructor<std::vector<uint8_t>&, int, int>()
     .function("MapToFace", &FaceReplace::MapToFace)
-    .function("DebugMode", &FaceReplace::DebugMode);
+    .function("DetectFaces", &FaceReplace::DetectFaces)
+    .function("DetectLandmarks", &FaceReplace::DetectLandmarks);
 }
