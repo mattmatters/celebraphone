@@ -78,7 +78,8 @@ test:e2e:
     - docker network create test
     - docker run -v $(pwd)/dist:/usr/share/nginx/html --network test --name devserve -d $GL_CONTAINER/devserver:$CI_PIPELINE_ID
     - sleep 5
-    - docker run -e BROWSERSTACK_ACCESS_KEY -e BROWSERSTACK_USER --env ADDRESS=devserve --network test $GL_CONTAINER/e2e:$CI_PIPELINE_ID
+    - docker run -e BROWSERSTACK_ACCESS_KEY -e BROWSERSTACK_USER --env ADDRESS=devserve --name tester --network test $GL_CONTAINER/e2e:$CI_PIPELINE_ID
+    - (if [ "$(docker inspect tester --format='{{.State.ExitCode}}')" == "0" ]; then echo "passed"; else exit "$(docker inspect tester --format='{{.State.ExitCode}}')"; fi);
     - docker stop devserve
 
 deploy:
