@@ -1,6 +1,6 @@
 #!/bin/bash
 
-NAME="face_replace"
+NAME="face_replace_high"
 
 pip install awscli
 aws s3 cp dist $BUCKET --recursive --exclude *.wasm --exclude *.data
