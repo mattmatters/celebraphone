@@ -15,6 +15,6 @@ fi
 emcmake cmake
 emmake make
 
-cat premodule.js face_replace_high.js bindings_high.js worker.js > dist/wasm/replacer.high.js
-
 cp face_* dist/wasm
+cp bindings_high.js dist/wasm/bindings.js
+cp worker.js dist/wasm
