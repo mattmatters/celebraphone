@@ -83,7 +83,7 @@ test:e2e:
     - docker stop devserve
 
 deploy:
-  image: python:latest
+  image: python:3.6
   stage: deploy
   dependencies:
     - release:wasm
