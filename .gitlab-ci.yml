@@ -91,7 +91,6 @@ deploy:
   variables:
     BUCKET: "s3://opencvwasm"
   before_script:
-    - apt-get install -y python-dev
     - pip install awscli
   script:
     - bash scripts/deploy.sh
