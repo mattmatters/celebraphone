@@ -101,8 +101,7 @@ function startWorker() {
 }
 
 navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
-  const url = window.URL || window.webkitURL;
-  video.src = url ? url.createObjectURL(stream) : stream;
+  video.srcObject = stream;
   video.play();
   startWorker();
 }).catch((error) => {
