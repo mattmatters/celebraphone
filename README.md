@@ -4,6 +4,8 @@
     <a href="https://www.browserstack.com/automate/public-build/WlM3bkVOdnplNUpXYkwzeSsvOVEzU1BEbzJoTU41anhhMlN5N1F5VXNQMD0tLW8xNSsxOHZCT3A1dmJ4N011RUROcmc9PQ==--c3d9d9808fc1e4f9292c315c64c6ec94b54a6a83%"><img alt="BrowserStack Status" src="https://www.browserstack.com/automate/badge.svg?badge_key=WlM3bkVOdnplNUpXYkwzeSsvOVEzU1BEbzJoTU41anhhMlN5N1F5VXNQMD0tLW8xNSsxOHZCT3A1dmJ4N011RUROcmc9PQ==--c3d9d9808fc1e4f9292c315c64c6ec94b54a6a83%" /></a>
 </p>
 
+<img align="center" src="static/demo.gif"></img>
+
 Identify and manipulate faces in a web browser.
 
 The facial recognition software uses a combination of OpenCV, DLib, and some
