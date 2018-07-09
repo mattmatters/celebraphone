@@ -17,4 +17,4 @@ emmake make
 
 cp face_* dist/wasm
 cp bindings_high.js dist/wasm/bindings.js
-cp worker.js dist/wasm
+cp *.js dist/wasm
