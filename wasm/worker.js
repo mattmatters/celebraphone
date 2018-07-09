@@ -1,9 +1,3 @@
-var Module = {
-  locateFile: (url) => `/wasm/${url}`,
-};
-
-importScripts('/wasm/face_replace_high.js', '/wasm/bindings.js');
-
 let replacer;
 
 Module.addOnPostRun(() => {
